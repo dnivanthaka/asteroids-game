@@ -21,6 +21,17 @@ typedef struct bullet_t{
     SDL_Texture *back;
 } bullet_t;
 
+typedef struct cosmic_t{
+    int x, y;
+    int w, h;
+    int vel_x, vel_y;
+    int acc_x, acc_y;
+    bool isVisible;
+    bool isPlayerFired;
+    SDL_Texture *tCosmic;
+    SDL_Texture *back;
+} cosmic_t;
+
 enum SoundEvent{
     PLAYER_FIRE = 0,
     ENEMY_FIRE,

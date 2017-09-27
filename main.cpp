@@ -39,6 +39,7 @@ void cleanup();
 void fire_bullet(bool isPlayer, int x, int y, HeadingDirection dir);
 void init_enemy(enemy_t *o, int x, int y);
 void init_player(int x, int y);
+void init_cosmic_object(int x, int y, int vel_x, int vel_y, HeadingDirection dir);
 //---------------------------------------------------------------------------------------------//
 
 //------------------------------- Defines ----------------------------------------------------//
@@ -58,7 +59,8 @@ void init_player(int x, int y);
 #define BULLET_START_VELX  0
 #define BULLET_START_VELY  1
 
-#define MAX_ENEMY_COUNT 10
+#define MAX_ENEMY_COUNT    10
+#define MAX_COSMIC_OBJECTS 15 // Max objects in one frame
 //---------------------------------------------------------------------------------------------//
 
 bool gameOver = false;
@@ -78,6 +80,7 @@ vector<enemy_t> enemies;
 
 vector<SoundEvent> soundQueue;
 vector<bullet_t> g_Bullets;
+vector<cosmic_t> g_CosmicObjects;
 vector<SDL_Texture *> g_Images;
 vector<Mix_Chunk *> g_AudioClips;
 
@@ -87,7 +90,8 @@ int randMotion[] = {1, 0, 1, -1, 1, 1};
 
 uint16_t playerKills = 0;
 
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[])
+{
         uint32_t fpsTimer, capTimer;
         int countedFrames = 0;
 
@@ -107,6 +111,10 @@ int main(int argc, char *argv[]){
             tmp.vel_y = 2;
 
             enemies.push_back(tmp);
+        }
+
+        for(int i=0;i<MAX_COSMIC_OBJECTS;i++){
+            init_cosmic_object(rand() % (g_ScreenWidth - 2), rand() % (g_ScreenHeight - 2), 0, 2, SOUTH);
         }
 
         fpsTimer = SDL_GetTicks();
@@ -148,17 +156,20 @@ int main(int argc, char *argv[]){
         return 0;
 }
 
-void erase_player(){
+void erase_player()
+{
     // Cleaning the back buffer, The framebuffer is cleared on each SDL_RenderPresent call
     SDL_RenderClear(m_pRenderer);
 }
 
-void erase_objects(){
+void erase_objects()
+{
 
 }
 
 
-void handle_inputs(){
+void handle_inputs()
+{
     SDL_Event event;
 
     if(SDL_PollEvent(&event)){
@@ -197,7 +208,8 @@ void handle_inputs(){
     }
 }
 
-void init_player(int x, int y){
+void init_player(int x, int y)
+{
     player.w = PLAYER_WIDTH;
     player.h = PLAYER_HEIGHT;
     player.x = x;
@@ -209,7 +221,8 @@ void init_player(int x, int y){
     player.tPlayer = g_Images[PLAYER];
 }
 
-void init_enemy(enemy_t *o, int x, int y){
+void init_enemy(enemy_t *o, int x, int y)
+{
     int nx;
 
     o->w = PLAYER_WIDTH;
@@ -243,7 +256,8 @@ void init_enemy(enemy_t *o, int x, int y){
 }
 
 
-bool init(const string title, int xpos, int ypos, int width, int height, int flags){
+bool init(const string title, int xpos, int ypos, int width, int height, int flags)
+{
         if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) == 0){
                 m_pWindow = SDL_CreateWindow(title.c_str(), xpos, ypos, width, height, flags);
 
@@ -285,7 +299,8 @@ bool init(const string title, int xpos, int ypos, int width, int height, int fla
     return true;
 }
 
-bool load_media(){
+bool load_media()
+{
 
    vector<string> sprites = {"shipsc2.pcx", "shipsc3.pcx"};
 
@@ -317,7 +332,41 @@ bool load_media(){
    return true;
 }
 
-void fire_bullet(bool isPlayer, int x, int y, HeadingDirection dir){
+void init_cosmic_object(int x, int y, int vel_x, int vel_y, HeadingDirection dir)
+{
+    cosmic_t object;
+    object.w = 2;
+    object.h = 2;
+    object.x = x;
+    object.y = y;
+    object.vel_x = vel_x;
+    object.vel_y = vel_y;
+    object.isVisible = true;
+    
+    if(dir == NORTH){
+        //Up
+        object.vel_y = -4;
+        object.acc_x = 0;
+        object.acc_y = 0;
+    }else{
+        //Down
+        object.vel_y = (rand() % 4) + 1;
+        object.acc_x = 0;
+        object.acc_y = 0;
+    }
+
+    SDL_Surface* s;
+
+    s = SDL_CreateRGBSurface(0, object.w, object.h, 32, 0, 0, 0, 0);
+    SDL_FillRect(s, nullptr, SDL_MapRGB(s->format, (rand() % 255) + 1, (rand() % 255) + 1, (rand() % 255) + 1));
+    object.tCosmic = SDL_CreateTextureFromSurface(m_pRenderer, s);
+
+
+    g_CosmicObjects.push_back(object);
+}
+
+void fire_bullet(bool isPlayer, int x, int y, HeadingDirection dir)
+{
     bullet_t bullet;
     bullet.w = BULLET_WIDTH;
     bullet.h = BULLET_HEIGHT;
@@ -349,7 +398,8 @@ void fire_bullet(bool isPlayer, int x, int y, HeadingDirection dir){
     g_Bullets.push_back(bullet);
 }
 
-void cleanup(){
+void cleanup()
+{
     //delete player;
     SDL_DestroyRenderer(m_pRenderer);
     SDL_DestroyWindow(m_pWindow);
@@ -368,17 +418,29 @@ void cleanup(){
     SDL_Quit();
 }
 
-void player_logic(){
+void player_logic()
+{
     player.x += player.vel_x;
     player.y += player.vel_y;
 }
 
-void object_logic(){
+void object_logic()
+{
 
     for(vector<bullet_t>::iterator it = g_Bullets.begin();it != g_Bullets.end(); ++it){
 
         //Move bullet
         it->y += it->vel_y;
+    }
+    for(vector<cosmic_t>::iterator it = g_CosmicObjects.begin();it != g_CosmicObjects.end(); ++it){
+
+        //Move 
+        if(it->isVisible){
+            it->y += it->vel_y;
+            it->x += it->vel_x;
+        }else{
+            it->isVisible = true;
+        }
     }
     for(vector<enemy_t>::iterator it = enemies.begin();it != enemies.end(); ++it){
 
@@ -422,7 +484,8 @@ void object_logic(){
     }
 }
                 
-void collision_detection(){
+void collision_detection()
+{
     //Check player boundaries
     if(player.x < 0){
         player.x = 0;
@@ -484,24 +547,51 @@ void collision_detection(){
              it->isVisible  = false;
         }
    }
+   //Remove cosmic objects that are out of the screen area
+   for(vector<cosmic_t>::iterator it = g_CosmicObjects.begin();it != g_CosmicObjects.end(); ++it){
+        if(it->isVisible && (it->y > g_ScreenHeight || it->y < 0)){
+             it->isVisible  = false;
+             //it->y = rand() % (g_ScreenHeight - 2); 
+             it->y = 0; 
+             it->x = rand() % (g_ScreenWidth - 2);
+             //it->delay_ticks = rand() % (1000 + 1);
+        }
+   }
 }
 
-void transform_objects(){
+void transform_objects()
+{
 
 }
 
-void transform_player(){
+void transform_player()
+{
+
 
 }
 
 
-void draw_objects(){
+void draw_objects()
+{
    SDL_Rect src, dest;
 
    src.w = BULLET_WIDTH;
    src.h = BULLET_HEIGHT;
    src.x = 0;
    src.y = 0;
+   //First draw stars and other cosmic objects
+   for(vector<cosmic_t>::iterator it = g_CosmicObjects.begin();it != g_CosmicObjects.end(); ++it){
+        if(it->isVisible){
+            cosmic_t b = *it;
+
+
+            dest.w = b.w;
+            dest.h = b.h;
+            dest.x = b.x;
+            dest.y = b.y;
+            SDL_RenderCopy(m_pRenderer, b.tCosmic, &src, &dest);
+        }
+   }
 
    for(vector<bullet_t>::iterator it = g_Bullets.begin();it != g_Bullets.end(); ++it){
         //cout << "playerBullets" << endl;
@@ -538,7 +628,8 @@ void draw_objects(){
    }
 }
 
-void draw_player(){
+void draw_player()
+{
    SDL_Rect src, dest;
 
    src.w = player.w;
@@ -559,13 +650,15 @@ void draw_player(){
 }
 
 
-void update_screen(){
+void update_screen()
+{
         //The backbuffer should be considered invalidated after each present; do not assume that previous contents will exist between frames.
         SDL_RenderPresent(m_pRenderer);
 }
 
 
-void play_media(){
+void play_media()
+{
 
     int i = 0;
     //empty the sound queue
@@ -585,7 +678,8 @@ void play_media(){
 }
 
 
-void misc_activity(){
+void misc_activity()
+{
     //Remove bullets that have gone beyond screen boundaries
    for(unsigned int i=0;i<g_Bullets.size();i++){
         //cout << "playerBullets" << endl;
