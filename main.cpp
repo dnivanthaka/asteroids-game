@@ -517,7 +517,7 @@ void collision_detection()
                     //Collision
                     //it->isVisible = false;
                     //cout << "Hit" << endl;
-                    if(it->hit_count == 0){
+                    /*if(it->hit_count == 0){
 
                         it->y = 0; 
                         it->x = rand() % (g_ScreenWidth - PLAYER_WIDTH);
@@ -531,10 +531,25 @@ void collision_detection()
                         //cout << "Hit" << endl;
                     }else{
                         it->hit_count -= 1;
+                    }*/
+                    if(it->hit_count > 0){
+                        it->hit_count -= 1;
                     }
 
                     //Hide the bullet, otherwise two hits are registered
                     it2->isVisible = false;
+
+                    if(it->hit_count == 0){
+                        it->y = 0; 
+                        it->x = rand() % (g_ScreenWidth - PLAYER_WIDTH);
+                        it->isVisible = false;
+                        it->delay_ticks = rand() % (1000 + 1);
+                        it->hit_count = 2;
+                        playerKills++;
+
+                        SoundEvent se = ENEMY_EXPLOSION;
+                        soundQueue.push_back(se);
+                    }
 
                 }
             }
