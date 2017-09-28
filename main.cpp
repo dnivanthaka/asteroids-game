@@ -90,10 +90,13 @@ int randMotion[] = {1, 0, 1, -1, 1, 1};
 
 uint16_t playerKills = 0;
 
+gamestate_t g_State = SPLASH;
+
 int main(int argc, char *argv[])
 {
         uint32_t fpsTimer, capTimer;
         int countedFrames = 0;
+        //Initial state as splash
 
         init("AstroGame",  0,  0,  0,  0,  SDL_WINDOW_FULLSCREEN);
 
@@ -125,19 +128,28 @@ int main(int argc, char *argv[])
         
             capTimer = SDL_GetTicks();
 
-            erase_player();
-            erase_objects();
-            handle_inputs();
-            player_logic();
-            object_logic();                
-            collision_detection();
-            transform_objects();
-            transform_player();
-            draw_objects();
-            draw_player();
-            update_screen();
-            play_media();
-            misc_activity();
+            if(g_State == PLAYING){
+
+                erase_player();
+                erase_objects();
+                handle_inputs();
+                player_logic();
+                object_logic();                
+                collision_detection();
+                transform_objects();
+                transform_player();
+                draw_objects();
+                draw_player();
+                update_screen();
+                play_media();
+                misc_activity();
+
+            }else if(g_State == PAUSED){
+                handle_inputs();
+            }else if(g_State == SPLASH){
+                handle_inputs();
+                update_screen();
+            }
 
             countedFrames++;
 
@@ -180,7 +192,18 @@ void handle_inputs()
 
         case SDL_KEYDOWN:
             if(event.key.keysym.scancode == SDL_SCANCODE_ESCAPE){
-                gameOver = true;
+                if(g_State == PLAYING){
+                    g_State = PAUSED;
+                }else if(g_State == PAUSED){
+                    gameOver = true;
+                }
+            }else if(event.key.keysym.scancode == SDL_SCANCODE_RETURN){
+                if(g_State == SPLASH){
+                    g_State = PLAYING;
+                }else if(g_State == PAUSED){
+                    g_State = PLAYING;
+                } 
+            
             }else if(event.key.keysym.scancode == SDL_SCANCODE_RIGHT){
                 player.vel_x = 3;
             }else if(event.key.keysym.scancode == SDL_SCANCODE_LEFT){
@@ -190,6 +213,11 @@ void handle_inputs()
                 //Add firing sound to the sound queue
                 SoundEvent se = PLAYER_FIRE;
                 soundQueue.push_back(se);
+            }else{
+                //If any other key play if the game is paused
+                if(g_State == PAUSED){
+                    g_State = PLAYING;
+                } 
             }
             
         break;
