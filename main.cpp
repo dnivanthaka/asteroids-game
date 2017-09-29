@@ -40,6 +40,8 @@ void fire_bullet(bool isPlayer, int x, int y, HeadingDirection dir);
 void init_enemy(enemy_t *o, int x, int y);
 void init_player(int x, int y);
 void init_cosmic_object(int x, int y, int vel_x, int vel_y, HeadingDirection dir);
+void show_splash();
+void show_gameover();
 //---------------------------------------------------------------------------------------------//
 
 //------------------------------- Defines ----------------------------------------------------//
@@ -63,7 +65,7 @@ void init_cosmic_object(int x, int y, int vel_x, int vel_y, HeadingDirection dir
 #define MAX_COSMIC_OBJECTS 15 // Max objects in one frame
 //---------------------------------------------------------------------------------------------//
 
-bool gameOver = false;
+bool gameIsRunning = false;
 
 //const static int g_ScreenWidth  = 800;
 //const static int g_ScreenHeight = 600;
@@ -124,7 +126,7 @@ int main(int argc, char *argv[])
         
         init_player((g_ScreenWidth / 2) - (PLAYER_WIDTH / 2), g_ScreenHeight);
 
-        while(!gameOver){
+        while(!gameIsRunning){
         
             capTimer = SDL_GetTicks();
 
@@ -146,8 +148,13 @@ int main(int argc, char *argv[])
 
             }else if(g_State == PAUSED){
                 handle_inputs();
+            }else if(g_State == GAMEOVER){
+                handle_inputs();
+                show_gameover();
+                update_screen();
             }else if(g_State == SPLASH){
                 handle_inputs();
+                show_splash();
                 update_screen();
             }
 
@@ -179,6 +186,15 @@ void erase_objects()
 
 }
 
+void show_splash()
+{
+
+}
+
+void show_gameover()
+{
+
+}
 
 void handle_inputs()
 {
@@ -187,15 +203,15 @@ void handle_inputs()
     if(SDL_PollEvent(&event)){
        switch(event.type){
         case SDL_QUIT:
-            gameOver = true;
+            gameIsRunning = true;
             break;
 
         case SDL_KEYDOWN:
             if(event.key.keysym.scancode == SDL_SCANCODE_ESCAPE){
                 if(g_State == PLAYING){
                     g_State = PAUSED;
-                }else if(g_State == PAUSED){
-                    gameOver = true;
+                }else if(g_State == PAUSED || g_State == GAMEOVER){
+                    gameIsRunning = true;
                 }
             }else if(event.key.keysym.scancode == SDL_SCANCODE_RETURN){
                 if(g_State == SPLASH){
