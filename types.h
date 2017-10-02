@@ -69,6 +69,7 @@ typedef enum{
     SPLASH = 0,
     MENU,
     PLAYING,
-    PAUSED
+    PAUSED,
+    GAMEOVER
 } gamestate_t;
 #endif
