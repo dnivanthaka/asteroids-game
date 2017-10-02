@@ -253,8 +253,8 @@ void init_enemy(enemy_t *o, int x, int y)
 {
     int nx;
 
-    o->w = PLAYER_WIDTH;
-    o->h = PLAYER_HEIGHT;
+    o->w = ENEMY_WIDTH;
+    o->h = ENEMY_HEIGHT;
     o->y = y;
     o->vel_x = 0;
     o->vel_y = 0;
@@ -330,7 +330,7 @@ bool init(const string title, int xpos, int ypos, int width, int height, int fla
 bool load_media()
 {
 
-   vector<string> sprites = {"shipsc2.pcx", "shipsc3.pcx"};
+   vector<string> sprites = {"shipsc2.pcx", "shipsc3.pcx", "shipsc3.pcx", "numbers.pcx"};
 
    for(unsigned int i=0;i<sprites.size();i++){
     SDL_Surface *tmp;
@@ -362,9 +362,11 @@ bool load_media()
 
 void init_cosmic_object(int x, int y, int vel_x, int vel_y, HeadingDirection dir)
 {
+    uint8_t wh = (rand() % 3) + 1;
+
     cosmic_t object;
-    object.w = 2;
-    object.h = 2;
+    object.w = wh;  //Equal random width and height
+    object.h = wh;
     object.x = x;
     object.y = y;
     object.vel_x = vel_x;
@@ -535,6 +537,7 @@ void collision_detection()
         }
     }
 
+    //Enemy Hits
     for(vector<enemy_t>::iterator it = enemies.begin();it != enemies.end(); ++it){
 
         for(vector<bullet_t>::iterator it2 = g_Bullets.begin();it2 != g_Bullets.end(); ++it2){
@@ -543,23 +546,6 @@ void collision_detection()
 
                 if(it2->x >= it->x && it2->x <= (it->x + ENEMY_WIDTH) && it2->y - (BULLET_HEIGHT / 2) <= (it->y + ENEMY_HEIGHT) && it2->y - (BULLET_HEIGHT / 2) >= it->y){
                     //Collision
-                    //it->isVisible = false;
-                    //cout << "Hit" << endl;
-                    /*if(it->hit_count == 0){
-
-                        it->y = 0; 
-                        it->x = rand() % (g_ScreenWidth - PLAYER_WIDTH);
-                        it->isVisible = false;
-                        it->delay_ticks = rand() % (1000 + 1);
-                        it->hit_count = 2;
-                        playerKills++;
-
-                        SoundEvent se = ENEMY_EXPLOSION;
-                        soundQueue.push_back(se);
-                        //cout << "Hit" << endl;
-                    }else{
-                        it->hit_count -= 1;
-                    }*/
                     if(it->hit_count > 0){
                         it->hit_count -= 1;
                     }

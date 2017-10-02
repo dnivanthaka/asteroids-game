@@ -42,7 +42,8 @@ enum SoundEvent{
 enum Sprite{
     PLAYER = 0,
     ENEMY1,
-    ENENY2
+    ENEMY2,
+    NUMBERS
 };
 
 enum HeadingDirection{
