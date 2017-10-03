@@ -78,7 +78,7 @@ static int g_ScreenHeight;
 
 SDL_Window   *m_pWindow;
 SDL_Renderer *m_pRenderer;
-SDL_Texture  *dashboard;
+SDL_Texture  *m_pDashboard;
 
 struct player_t player;
 vector<enemy_t> enemies;
