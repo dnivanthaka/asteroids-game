@@ -72,4 +72,8 @@ typedef enum{
     PAUSED,
     GAMEOVER
 } gamestate_t;
+
+typedef struct menustate_t{
+
+} menustate_t;
 #endif

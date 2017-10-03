@@ -65,6 +65,9 @@ void init_dashboard();
 
 #define MAX_ENEMY_COUNT    10
 #define MAX_COSMIC_OBJECTS 15 // Max objects in one frame
+
+#define MENU_WIDTH  200
+#define MENU_HEIGHT 100
 //---------------------------------------------------------------------------------------------//
 
 bool gameIsRunning = true;
@@ -80,6 +83,9 @@ SDL_Window   *m_pWindow;
 SDL_Renderer *m_pRenderer;
 SDL_Texture  *m_pDashboard;
 
+//TODO improve the menu
+SDL_Texture  *m_pMenu;
+
 struct player_t player;
 vector<enemy_t> enemies;
 
@@ -87,6 +93,7 @@ vector<SoundEvent> soundQueue;
 vector<bullet_t> g_Bullets;
 vector<cosmic_t> g_CosmicObjects;
 vector<SDL_Texture *> g_Images;
+vector<menustate_t> g_MenuStack;
 vector<Mix_Chunk *> g_AudioClips;
 
 vector<int> g_enemyXCoords;
@@ -203,7 +210,19 @@ void show_gameover()
 
 void show_menu()
 {
+    SDL_Rect src, dest;
 
+    src.w = 200;
+    src.h = 100;
+    src.x = 0;
+    src.y = 0;
+
+    dest.w = 200;
+    dest.h = 100;
+    dest.x = (g_ScreenWidth / 2) - (dest.w / 2);
+    dest.y = (g_ScreenHeight / 2) - (dest.h / 2);
+    //SDL_RenderClear(m_pRenderer);
+    SDL_RenderCopy(m_pRenderer, m_pMenu, &src, &dest);
 }
 
 void handle_inputs()
@@ -353,6 +372,11 @@ bool init(const string title, int xpos, int ypos, int width, int height, int fla
 
 
     //init_player((g_ScreenWidth / 2) - (player.w / 2), g_ScreenHeight);
+    SDL_Surface *s;
+
+    s = SDL_CreateRGBSurface(0, 200, 100, 32, 0, 0, 0, 0);
+    SDL_FillRect(s, nullptr, SDL_MapRGB(s->format, 255, 255, 255));
+    m_pMenu = SDL_CreateTextureFromSurface(m_pRenderer, s);
 
 
     return true;
@@ -464,6 +488,9 @@ void cleanup()
     //delete player;
     SDL_DestroyRenderer(m_pRenderer);
     SDL_DestroyWindow(m_pWindow);
+
+    SDL_DestroyTexture(m_pDashboard);
+    SDL_DestroyTexture(m_pMenu);
 
     while(!g_AudioClips.empty()){
         Mix_FreeChunk(g_AudioClips.back());
