@@ -42,6 +42,8 @@ void init_player(int x, int y);
 void init_cosmic_object(int x, int y, int vel_x, int vel_y, HeadingDirection dir);
 void show_splash();
 void show_gameover();
+void show_menu();
+void init_dashboard();
 //---------------------------------------------------------------------------------------------//
 
 //------------------------------- Defines ----------------------------------------------------//
@@ -65,7 +67,7 @@ void show_gameover();
 #define MAX_COSMIC_OBJECTS 15 // Max objects in one frame
 //---------------------------------------------------------------------------------------------//
 
-bool gameIsRunning = false;
+bool gameIsRunning = true;
 
 //const static int g_ScreenWidth  = 800;
 //const static int g_ScreenHeight = 600;
@@ -76,6 +78,7 @@ static int g_ScreenHeight;
 
 SDL_Window   *m_pWindow;
 SDL_Renderer *m_pRenderer;
+SDL_Texture  *dashboard;
 
 struct player_t player;
 vector<enemy_t> enemies;
@@ -126,7 +129,7 @@ int main(int argc, char *argv[])
         
         init_player((g_ScreenWidth / 2) - (PLAYER_WIDTH / 2), g_ScreenHeight);
 
-        while(!gameIsRunning){
+        while(gameIsRunning){
         
             capTimer = SDL_GetTicks();
 
@@ -148,6 +151,8 @@ int main(int argc, char *argv[])
 
             }else if(g_State == PAUSED){
                 handle_inputs();
+                show_menu();
+                update_screen();
             }else if(g_State == GAMEOVER){
                 handle_inputs();
                 show_gameover();
@@ -196,6 +201,11 @@ void show_gameover()
 
 }
 
+void show_menu()
+{
+
+}
+
 void handle_inputs()
 {
     SDL_Event event;
@@ -211,7 +221,7 @@ void handle_inputs()
                 if(g_State == PLAYING){
                     g_State = PAUSED;
                 }else if(g_State == PAUSED || g_State == GAMEOVER){
-                    gameIsRunning = true;
+                    gameIsRunning = false;
                 }
             }else if(event.key.keysym.scancode == SDL_SCANCODE_RETURN){
                 if(g_State == SPLASH){
@@ -297,6 +307,11 @@ void init_enemy(enemy_t *o, int x, int y)
     o->isVisible = false;
 
     g_enemyXCoords.push_back(tmp);
+}
+
+void init_dashboard()
+{
+    //Init scoreboard, ammo counts etc.
 }
 
 
@@ -671,6 +686,20 @@ void draw_objects()
             SDL_RenderCopy(m_pRenderer, b.tEnemy, &src, &dest);
         }
    }
+
+   //Finally draw the dashboard
+   //src.w = g_ScreenWidth;
+   src.w = 54;
+   src.h = 32;
+   src.x = 0;
+   src.y = 0;
+   //dest.w = g_ScreenWidth;
+   dest.w = 54;
+   //dest.h = 64;
+   dest.h = 32;
+   dest.x = 0;
+   dest.y = 0;
+   SDL_RenderCopy(m_pRenderer, g_Images[NUMBERS], &src, &dest);
 }
 
 void draw_player()
