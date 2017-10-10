@@ -44,6 +44,7 @@ void show_splash();
 void show_gameover();
 void show_menu();
 void init_dashboard();
+void print_text(const char *str);
 //---------------------------------------------------------------------------------------------//
 
 //------------------------------- Defines ----------------------------------------------------//
@@ -385,7 +386,7 @@ bool init(const string title, int xpos, int ypos, int width, int height, int fla
 bool load_media()
 {
 
-   vector<string> sprites = {"shipsc2.pcx", "shipsc3.pcx", "shipsc3.pcx", "numbers.pcx"};
+   vector<string> sprites = {"shipsc2.pcx", "shipsc3.pcx", "shipsc3.pcx", "fonts.pcx"};
 
    for(unsigned int i=0;i<sprites.size();i++){
     SDL_Surface *tmp;
@@ -716,17 +717,46 @@ void draw_objects()
 
    //Finally draw the dashboard
    //src.w = g_ScreenWidth;
-   src.w = 54;
-   src.h = 32;
+   /*src.w = 150;
+   src.h = 50;
    src.x = 0;
    src.y = 0;
    //dest.w = g_ScreenWidth;
-   dest.w = 54;
+   dest.w = 150;
    //dest.h = 64;
-   dest.h = 32;
+   dest.h = 50;
    dest.x = 0;
    dest.y = 0;
-   SDL_RenderCopy(m_pRenderer, g_Images[NUMBERS], &src, &dest);
+   SDL_RenderCopy(m_pRenderer, g_Images[NUMBERS], &src, &dest);*/
+   print_text("ABC");
+}
+
+void print_text(const char *str)
+{
+   SDL_Rect src, dest;
+   uint16_t i = 0;
+
+   while(*str != '\0'){
+    printf("%c ", *str);
+
+    uint8_t loc = *str;
+    printf("%d ", loc);
+
+    src.w = 10;
+    src.h = 10;
+    src.x = (loc - 65) * 10;
+    src.y = 0;
+    //dest.w = g_ScreenWidth;
+    dest.w = 10;
+    //dest.h = 64;
+    dest.h = 10;
+    dest.x = i * 10;
+    dest.y = 0;
+    SDL_RenderCopy(m_pRenderer, g_Images[NUMBERS], &src, &dest);
+
+    i++;
+    str++;
+   }
 }
 
 void draw_player()
