@@ -407,7 +407,7 @@ bool load_media()
 
 
    //Reading sound mixes
-   vector<string> mixes = {"FLASER.wav", "EXP.wav"};
+   vector<string> mixes = {"fire.wav", "explosion.wav", "panel.wav", "switch.wav"};
 
    for(unsigned int i=0;i<mixes.size();i++){
     Mix_Chunk *tmp = Mix_LoadWAV(mixes[i].c_str());
