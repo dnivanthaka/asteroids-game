@@ -226,6 +226,7 @@ void show_menu()
     SDL_RenderCopy(m_pRenderer, m_pMenu, &src, &dest);
 }
 
+//TODO improve event handling
 void handle_inputs()
 {
     SDL_Event event;
@@ -735,17 +736,27 @@ void print_text(const char *str)
 {
    SDL_Rect src, dest;
    uint16_t i = 0;
+   uint8_t row = 0;
 
    while(*str != '\0'){
-    printf("%c ", *str);
+    //printf("%c ", *str);
 
     uint8_t loc = *str;
     printf("%d ", loc);
 
     src.w = 10;
     src.h = 10;
-    src.x = (loc - 65) * 10;
-    src.y = 0;
+    if(loc >= 65){
+        //This is a letter
+        row   = (loc - 65) / 15;
+        src.x = (loc - 65) * 10;
+        src.y = row * 10;
+    }else if(loc < 65){
+        //This is a number
+        row   = ((loc - 48) / 15) + 1;
+        src.x = (loc - 48) * 10;
+        src.y = row * 10;
+    }
     //dest.w = g_ScreenWidth;
     dest.w = 10;
     //dest.h = 64;
