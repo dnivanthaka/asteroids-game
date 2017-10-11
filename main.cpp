@@ -44,7 +44,7 @@ void show_splash();
 void show_gameover();
 void show_menu();
 void init_dashboard();
-void print_text(const char *str);
+void print_text(const char *str, uint16_t x, uint16_t y);
 //---------------------------------------------------------------------------------------------//
 
 //------------------------------- Defines ----------------------------------------------------//
@@ -183,7 +183,7 @@ int main(int argc, char *argv[])
         }
         cleanup();
 
-        cout << "You shot down " << playerKills << " enemy ships." << endl;
+        //cout << "You shot down " << playerKills << " enemy ships." << endl;
 
         return 0;
 }
@@ -224,6 +224,9 @@ void show_menu()
     dest.y = (g_ScreenHeight / 2) - (dest.h / 2);
     //SDL_RenderClear(m_pRenderer);
     SDL_RenderCopy(m_pRenderer, m_pMenu, &src, &dest);
+
+    print_text("CONFIGURE", dest.x + 5, dest.y + 5);
+    print_text("EXIT", dest.x + 5, dest.y + 18);
 }
 
 //TODO improve event handling
@@ -377,7 +380,7 @@ bool init(const string title, int xpos, int ypos, int width, int height, int fla
     SDL_Surface *s;
 
     s = SDL_CreateRGBSurface(0, 200, 100, 32, 0, 0, 0, 0);
-    SDL_FillRect(s, nullptr, SDL_MapRGB(s->format, 255, 255, 255));
+    SDL_FillRect(s, nullptr, SDL_MapRGB(s->format, 255, 0, 0));
     m_pMenu = SDL_CreateTextureFromSurface(m_pRenderer, s);
 
 
@@ -663,6 +666,7 @@ void transform_player()
 void draw_objects()
 {
    SDL_Rect src, dest;
+   char buff[80];
 
    src.w = BULLET_WIDTH;
    src.h = BULLET_HEIGHT;
@@ -717,22 +721,11 @@ void draw_objects()
    }
 
    //Finally draw the dashboard
-   //src.w = g_ScreenWidth;
-   /*src.w = 150;
-   src.h = 50;
-   src.x = 0;
-   src.y = 0;
-   //dest.w = g_ScreenWidth;
-   dest.w = 150;
-   //dest.h = 64;
-   dest.h = 50;
-   dest.x = 0;
-   dest.y = 0;
-   SDL_RenderCopy(m_pRenderer, g_Images[NUMBERS], &src, &dest);*/
-   print_text("ABC");
+   sprintf(buff, "KILLS %d", playerKills);
+   print_text(buff, g_ScreenWidth - 200, 5);
 }
 
-void print_text(const char *str)
+void print_text(const char *str, uint16_t x, uint16_t y)
 {
    SDL_Rect src, dest;
    uint16_t i = 0;
@@ -742,27 +735,34 @@ void print_text(const char *str)
     //printf("%c ", *str);
 
     uint8_t loc = *str;
-    printf("%d ", loc);
+    //printf("%d ", loc);
 
     src.w = 10;
     src.h = 10;
     if(loc >= 65){
         //This is a letter
         row   = (loc - 65) / 15;
-        src.x = (loc - 65) * 10;
+        src.x = ((loc - 65) % 15) * 10;
+        //printf("row=%d ", row);
         src.y = row * 10;
-    }else if(loc < 65){
+    }else if(loc >= 48){
         //This is a number
-        row   = ((loc - 48) / 15) + 1;
-        src.x = (loc - 48) * 10;
+        row   = (((loc - 48) + 11) / 15) + 1;
+        src.x = (((loc - 48) + 11) % 15) * 10;
+        src.y = row * 10;
+    }else if(loc == 32){
+        //printf("Space");
+        //Space
+        row   = 3;
+        src.x = 0;
         src.y = row * 10;
     }
     //dest.w = g_ScreenWidth;
     dest.w = 10;
     //dest.h = 64;
     dest.h = 10;
-    dest.x = i * 10;
-    dest.y = 0;
+    dest.x = x + (i * 10);
+    dest.y = y;
     SDL_RenderCopy(m_pRenderer, g_Images[NUMBERS], &src, &dest);
 
     i++;
