@@ -86,6 +86,7 @@ SDL_Texture  *m_pDashboard;
 
 //TODO improve the menu
 SDL_Texture  *m_pMenu;
+SDL_Texture  *m_pGameOver;
 
 struct player_t player;
 vector<enemy_t> enemies;
@@ -201,15 +202,10 @@ void erase_objects()
 
 void show_splash()
 {
-
+//TODO Update frames here and change the state to PLAYING
 }
 
 void show_gameover()
-{
-
-}
-
-void show_menu()
 {
     SDL_Rect src, dest;
 
@@ -223,10 +219,32 @@ void show_menu()
     dest.x = (g_ScreenWidth / 2) - (dest.w / 2);
     dest.y = (g_ScreenHeight / 2) - (dest.h / 2);
     //SDL_RenderClear(m_pRenderer);
+    SDL_RenderCopy(m_pRenderer, m_pGameOver, &src, &dest);
+
+    print_text("GAME OVER!!!", dest.x + 20, dest.y + (dest.h / 2) - 5);
+}
+
+void show_menu()
+{
+    SDL_Rect src, dest;
+
+    src.w = 300;
+    src.h = 100;
+    src.x = 0;
+    src.y = 0;
+
+    dest.w = 300;
+    dest.h = 100;
+    dest.x = (g_ScreenWidth / 2) - (dest.w / 2);
+    dest.y = (g_ScreenHeight / 2) - (dest.h / 2);
+    //SDL_RenderClear(m_pRenderer);
     SDL_RenderCopy(m_pRenderer, m_pMenu, &src, &dest);
 
-    print_text("CONFIGURE", dest.x + 5, dest.y + 5);
-    print_text("EXIT", dest.x + 5, dest.y + 18);
+    //With Padding
+    print_text("CONFIGURE", dest.x + 15, dest.y + 5);
+    print_text("EXIT", dest.x + 15, dest.y + 18);
+
+    print_text("*", dest.x + 5, dest.y + 5);
 }
 
 //TODO improve event handling
@@ -381,7 +399,15 @@ bool init(const string title, int xpos, int ypos, int width, int height, int fla
 
     s = SDL_CreateRGBSurface(0, 200, 100, 32, 0, 0, 0, 0);
     SDL_FillRect(s, nullptr, SDL_MapRGB(s->format, 255, 0, 0));
+    m_pGameOver = SDL_CreateTextureFromSurface(m_pRenderer, s);
+
+    SDL_FreeSurface(s);
+
+    s = SDL_CreateRGBSurface(0, 300, 100, 32, 0, 0, 0, 0);
+    SDL_FillRect(s, nullptr, SDL_MapRGB(s->format, 0, 0, 255));
     m_pMenu = SDL_CreateTextureFromSurface(m_pRenderer, s);
+
+    SDL_FreeSurface(s);
 
 
     return true;
