@@ -721,7 +721,7 @@ void draw_objects()
    }
 
    //Finally draw the dashboard
-   sprintf(buff, "KILLS %d", playerKills);
+   sprintf(buff, "KILLS: %d", playerKills);
    print_text(buff, g_ScreenWidth - 200, 5);
 }
 
@@ -750,11 +750,14 @@ void print_text(const char *str, uint16_t x, uint16_t y)
         row   = (((loc - 48) + 11) / 15) + 1;
         src.x = (((loc - 48) + 11) % 15) * 10;
         src.y = row * 10;
-    }else if(loc == 32){
+    }else if(loc >= 32){
         //printf("Space");
-        //Space
-        row   = 3;
-        src.x = 0;
+        //Space and chars
+        //row   = 3;
+        //src.x = 0;
+        //src.y = row * 10;
+        row   = (((loc - 32) + 8) / 15) + 2;
+        src.x = (((loc - 32) + 8) % 15) * 10;
         src.y = row * 10;
     }
     //dest.w = g_ScreenWidth;
