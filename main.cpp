@@ -103,8 +103,11 @@ vector<int> g_enemyXCoords;
 int randMotion[] = {1, 0, 1, -1, 1, 1};
 
 uint16_t playerKills = 0;
+uint16_t playerHits  = 0;
 
 gamestate_t g_State = SPLASH;
+
+uint8_t g_MenuSelection = 0;
 
 int main(int argc, char *argv[])
 {
@@ -158,10 +161,11 @@ int main(int argc, char *argv[])
                 play_media();
                 misc_activity();
 
-            }else if(g_State == PAUSED){
+            }else if(g_State == MENU){
                 handle_inputs();
                 show_menu();
                 update_screen();
+                play_media();
             }else if(g_State == GAMEOVER){
                 handle_inputs();
                 show_gameover();
@@ -170,6 +174,7 @@ int main(int argc, char *argv[])
                 handle_inputs();
                 show_splash();
                 update_screen();
+                play_media();
             }
 
             countedFrames++;
@@ -243,8 +248,8 @@ void show_menu()
     //With Padding
     print_text("CONFIGURE", dest.x + 15, dest.y + 5);
     print_text("EXIT", dest.x + 15, dest.y + 18);
-
-    print_text("*", dest.x + 5, dest.y + 5);
+    
+    print_text("*", dest.x + 5, (dest.y + 5) + (g_MenuSelection * 13));
 }
 
 //TODO improve event handling
@@ -261,26 +266,58 @@ void handle_inputs()
         case SDL_KEYDOWN:
             if(event.key.keysym.scancode == SDL_SCANCODE_ESCAPE){
                 if(g_State == PLAYING){
-                    g_State = PAUSED;
+                    //g_State = PAUSED;
+                    g_State = MENU;
+                    SoundEvent se = MENU_APPEAR;
+                    soundQueue.push_back(se);
+                    //Start with the first item
+                    g_MenuSelection = 0;
+                }else if(g_State == MENU){
+                    g_State = PLAYING;
                 }else if(g_State == PAUSED || g_State == GAMEOVER){
-                    gameIsRunning = false;
+                    //gameIsRunning = false;
                 }
             }else if(event.key.keysym.scancode == SDL_SCANCODE_RETURN){
                 if(g_State == SPLASH){
                     g_State = PLAYING;
                 }else if(g_State == PAUSED){
                     g_State = PLAYING;
+                }else if(g_State == MENU){
+                    if(g_MenuSelection == 1){
+                        //Exit game
+                        gameIsRunning = false;
+                    }
                 } 
-            
             }else if(event.key.keysym.scancode == SDL_SCANCODE_RIGHT){
-                player.vel_x = 3;
+                if(g_State == PLAYING){
+                    player.vel_x = 3;
+                }
             }else if(event.key.keysym.scancode == SDL_SCANCODE_LEFT){
-                player.vel_x = -3;
+                if(g_State == PLAYING){
+                    player.vel_x = -3;
+                }
             }else if(event.key.keysym.scancode == SDL_SCANCODE_RCTRL || event.key.keysym.scancode == SDL_SCANCODE_LCTRL){
-                fire_bullet(true, player.x + (player.w / 2) - (BULLET_WIDTH / 2), player.y - player.h, NORTH);
-                //Add firing sound to the sound queue
-                SoundEvent se = PLAYER_FIRE;
+                if(g_State == PLAYING){
+                    fire_bullet(true, player.x + (player.w / 2) - (BULLET_WIDTH / 2), player.y - player.h, NORTH);
+                    //Add firing sound to the sound queue
+                    SoundEvent se = PLAYER_FIRE;
+                    soundQueue.push_back(se);
+                }
+            }else if(event.key.keysym.scancode == SDL_SCANCODE_UP){
+               if(g_State == MENU){
+                if(g_MenuSelection > 0){
+                    g_MenuSelection--;
+                    SoundEvent se = MENU_TRAVERSE;
+                    soundQueue.push_back(se);
+                } 
+               } 
+            }else if(event.key.keysym.scancode == SDL_SCANCODE_DOWN){
+               if(g_State == MENU){
+                g_MenuSelection++;
+                g_MenuSelection %= 2;
+                SoundEvent se = MENU_TRAVERSE;
                 soundQueue.push_back(se);
+               } 
             }else{
                 //If any other key play if the game is paused
                 if(g_State == PAUSED){
@@ -314,6 +351,8 @@ void init_player(int x, int y)
     player.vel_y = 0;
     player.acc_x = 0;
     player.acc_y = 0;
+    //Max hit count
+    player.hit_count = 4;
     player.tPlayer = g_Images[PLAYER];
 }
 
@@ -749,6 +788,8 @@ void draw_objects()
    //Finally draw the dashboard
    sprintf(buff, "KILLS: %d", playerKills);
    print_text(buff, g_ScreenWidth - 200, 5);
+   sprintf(buff, "PLAYER HITS: %d", playerHits);
+   print_text(buff, 200, 5);
 }
 
 void print_text(const char *str, uint16_t x, uint16_t y)
@@ -840,6 +881,10 @@ void play_media()
             Mix_PlayChannel(-1, g_AudioClips[0], 0);
         }else if(se == ENEMY_EXPLOSION){
             Mix_PlayChannel(-1, g_AudioClips[1], 0);
+        }else if(se == MENU_APPEAR){
+            Mix_PlayChannel(-1, g_AudioClips[2], 0);
+        }else if(se == MENU_TRAVERSE){
+            Mix_PlayChannel(-1, g_AudioClips[3], 0);
         }
         //Inefficient
         soundQueue.erase(soundQueue.begin());

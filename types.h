@@ -36,7 +36,9 @@ enum SoundEvent{
     PLAYER_FIRE = 0,
     ENEMY_FIRE,
     ENEMY_EXPLOSION,
-    PLAYER_EXPLOSION
+    PLAYER_EXPLOSION,
+    MENU_APPEAR,
+    MENU_TRAVERSE
 };
 
 enum Sprite{
