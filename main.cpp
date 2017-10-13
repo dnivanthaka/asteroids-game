@@ -45,6 +45,7 @@ void show_gameover();
 void show_menu();
 void init_dashboard();
 void print_text(const char *str, uint16_t x, uint16_t y);
+void restart_game();
 //---------------------------------------------------------------------------------------------//
 
 //------------------------------- Defines ----------------------------------------------------//
@@ -162,12 +163,24 @@ int main(int argc, char *argv[])
                 misc_activity();
 
             }else if(g_State == MENU){
+                erase_player();
+                erase_objects();
                 handle_inputs();
+                transform_objects();
+                transform_player();
+                draw_objects();
+                draw_player();
                 show_menu();
                 update_screen();
                 play_media();
             }else if(g_State == GAMEOVER){
+                erase_player();
+                erase_objects();
                 handle_inputs();
+                transform_objects();
+                transform_player();
+                draw_objects();
+                draw_player();
                 show_gameover();
                 update_screen();
                 play_media();
@@ -176,6 +189,10 @@ int main(int argc, char *argv[])
                 show_splash();
                 update_screen();
                 play_media();
+            }else if(g_State == RESTART){
+                restart_game();
+
+                g_State = PLAYING;
             }
 
             countedFrames++;
@@ -191,6 +208,7 @@ int main(int argc, char *argv[])
         cleanup();
 
         //cout << "You shot down " << playerKills << " enemy ships." << endl;
+        exit(EXIT_SUCCESS);
 
         return 0;
 }
@@ -206,31 +224,75 @@ void erase_objects()
 
 }
 
+void restart_game()
+{
+   g_enemyXCoords.clear();
+   g_Bullets.clear();
+   soundQueue.clear();
+
+   for(int i=0;i<MAX_ENEMY_COUNT;i++){
+       enemy_t *tmp = &enemies[i];
+
+       init_enemy(tmp, rand() % (g_ScreenWidth - PLAYER_WIDTH), 0);
+       tmp->vel_y = 2;
+
+   }
+
+   init_player((g_ScreenWidth / 2) - (PLAYER_WIDTH / 2), g_ScreenHeight);
+   
+   playerKills = 0;
+   playerHits  = 0;
+}
+
 void show_splash()
 {
 //TODO Update frames here and change the state to PLAYING
+    SDL_Rect src, dest;
+
+    src.w = 300;
+    src.h = 100;
+    src.x = 0;
+    src.y = 0;
+
+    dest.w = 300;
+    dest.h = 100;
+    dest.x = (g_ScreenWidth / 2) - (dest.w / 2);
+    dest.y = (g_ScreenHeight / 2) - (dest.h / 2);
+    //SDL_RenderClear(m_pRenderer);
+    
+    //SDL_RenderClear(m_pRenderer);
+    
+    SDL_RenderCopy(m_pRenderer, m_pMenu, &src, &dest);
+
+    //With Padding
+    print_text("ASTEROIDS GAME", dest.x + (dest.w / 2) - 70, dest.y + 5);
+    print_text("(C) D.N. AMERASINGHE", dest.x + (dest.w / 2) - 100, dest.y + 25);
+    print_text("PRESS ENTER TO START PLAYING", dest.x + 15, dest.y + (dest.h - 20) );
+    
+    //print_text("*", dest.x + 5, (dest.y + 5) + (g_MenuSelection * 13));
 }
 
 void show_gameover()
 {
     SDL_Rect src, dest;
 
-    src.w = 200;
+    src.w = 400;
     src.h = 100;
     src.x = 0;
     src.y = 0;
 
-    dest.w = 200;
+    dest.w = 400;
     dest.h = 100;
     dest.x = (g_ScreenWidth / 2) - (dest.w / 2);
     dest.y = (g_ScreenHeight / 2) - (dest.h / 2);
     //SDL_RenderClear(m_pRenderer);
     
-    SDL_RenderClear(m_pRenderer);
+    //SDL_RenderClear(m_pRenderer);
     
     SDL_RenderCopy(m_pRenderer, m_pGameOver, &src, &dest);
 
-    print_text("GAME OVER!!!", dest.x + 20, dest.y + (dest.h / 2) - 5);
+    print_text("GAME OVER!!!", dest.x + (dest.w / 2) - 60, dest.y + 10);
+    print_text("PRESS 'R' TO RESTART OR 'X' TO QUIT", dest.x + 20, dest.y + (dest.h / 2) + 20);
 }
 
 void show_menu()
@@ -248,15 +310,16 @@ void show_menu()
     dest.y = (g_ScreenHeight / 2) - (dest.h / 2);
     //SDL_RenderClear(m_pRenderer);
     
-    SDL_RenderClear(m_pRenderer);
+    //SDL_RenderClear(m_pRenderer);
     
     SDL_RenderCopy(m_pRenderer, m_pMenu, &src, &dest);
 
     //With Padding
-    print_text("CONFIGURE", dest.x + 15, dest.y + 5);
-    print_text("EXIT", dest.x + 15, dest.y + 18);
+    print_text("NEW GAME", dest.x + 15, dest.y + 5);
+    print_text("CONFIGURE", dest.x + 15, dest.y + 25);
+    print_text("EXIT", dest.x + 15, dest.y + 45);
     
-    print_text("*", dest.x + 5, (dest.y + 5) + (g_MenuSelection * 13));
+    print_text("*", dest.x + 5, (dest.y + 5) + (g_MenuSelection * 20));
 }
 
 //TODO improve event handling
@@ -282,7 +345,7 @@ void handle_inputs()
                 }else if(g_State == MENU){
                     g_State = PLAYING;
                 }else if(g_State == GAMEOVER){
-                    g_State = MENU;
+                    //g_State = MENU;
                 }
             }else if(event.key.keysym.scancode == SDL_SCANCODE_RETURN){
                 if(g_State == SPLASH){
@@ -290,7 +353,9 @@ void handle_inputs()
                 }else if(g_State == PAUSED){
                     g_State = PLAYING;
                 }else if(g_State == MENU){
-                    if(g_MenuSelection == 1){
+                    if(g_MenuSelection == 0){
+                        g_State = RESTART;
+                    }else if(g_MenuSelection == 2){
                         //Exit game
                         gameIsRunning = false;
                     }
@@ -321,10 +386,18 @@ void handle_inputs()
             }else if(event.key.keysym.scancode == SDL_SCANCODE_DOWN){
                if(g_State == MENU){
                 g_MenuSelection++;
-                g_MenuSelection %= 2;
+                g_MenuSelection %= 3;
                 SoundEvent se = MENU_TRAVERSE;
                 soundQueue.push_back(se);
                } 
+            }else if(event.key.keysym.scancode == SDL_SCANCODE_R){
+                if(g_State == GAMEOVER){
+                    g_State = RESTART;
+                }
+            }else if(event.key.keysym.scancode == SDL_SCANCODE_X){
+                if(g_State == GAMEOVER){
+                    gameIsRunning = false;
+                }
             }else{
                 //If any other key play if the game is paused
                 if(g_State == PAUSED){
@@ -577,6 +650,11 @@ void cleanup()
         SDL_DestroyTexture(g_Images.back());
         g_Images.pop_back();
     }
+
+    g_enemyXCoords.clear();
+    g_Bullets.clear();
+    g_CosmicObjects.clear();
+    soundQueue.clear();
 
     Mix_Quit();
     IMG_Quit();

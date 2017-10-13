@@ -72,6 +72,7 @@ typedef enum{
     MENU,
     PLAYING,
     PAUSED,
+    RESTART,
     GAMEOVER
 } gamestate_t;
 
