@@ -170,6 +170,7 @@ int main(int argc, char *argv[])
                 handle_inputs();
                 show_gameover();
                 update_screen();
+                play_media();
             }else if(g_State == SPLASH){
                 handle_inputs();
                 show_splash();
@@ -224,6 +225,9 @@ void show_gameover()
     dest.x = (g_ScreenWidth / 2) - (dest.w / 2);
     dest.y = (g_ScreenHeight / 2) - (dest.h / 2);
     //SDL_RenderClear(m_pRenderer);
+    
+    SDL_RenderClear(m_pRenderer);
+    
     SDL_RenderCopy(m_pRenderer, m_pGameOver, &src, &dest);
 
     print_text("GAME OVER!!!", dest.x + 20, dest.y + (dest.h / 2) - 5);
@@ -243,6 +247,9 @@ void show_menu()
     dest.x = (g_ScreenWidth / 2) - (dest.w / 2);
     dest.y = (g_ScreenHeight / 2) - (dest.h / 2);
     //SDL_RenderClear(m_pRenderer);
+    
+    SDL_RenderClear(m_pRenderer);
+    
     SDL_RenderCopy(m_pRenderer, m_pMenu, &src, &dest);
 
     //With Padding
@@ -274,8 +281,8 @@ void handle_inputs()
                     g_MenuSelection = 0;
                 }else if(g_State == MENU){
                     g_State = PLAYING;
-                }else if(g_State == PAUSED || g_State == GAMEOVER){
-                    //gameIsRunning = false;
+                }else if(g_State == GAMEOVER){
+                    g_State = MENU;
                 }
             }else if(event.key.keysym.scancode == SDL_SCANCODE_RETURN){
                 if(g_State == SPLASH){
@@ -697,6 +704,33 @@ void collision_detection()
             }
         }
     }
+
+    //Player Hits
+    for(vector<bullet_t>::iterator it2 = g_Bullets.begin();it2 != g_Bullets.end(); ++it2){
+
+        if(!it2->isPlayerFired && it2->isVisible){
+
+            if(it2->x >= player.x && it2->x <= (player.x + PLAYER_WIDTH) && it2->y - (BULLET_HEIGHT / 2) <= (player.y + PLAYER_HEIGHT) && it2->y - (BULLET_HEIGHT / 2) >= player.y){
+            //Collision
+                if(player.hit_count > 0){
+                    player.hit_count -= 1;
+                    playerHits++;
+                }
+
+                //Hide the bullet, otherwise two hits are registered
+                it2->isVisible = false;
+
+                if(player.hit_count == 0){
+                    g_State = GAMEOVER;
+
+                    SoundEvent se = ENEMY_EXPLOSION;
+                    soundQueue.push_back(se);
+                }
+
+            }
+        }
+   }
+       
 
    for(vector<bullet_t>::iterator it = g_Bullets.begin();it != g_Bullets.end(); ++it){
         //cout << "playerBullets" << endl;
