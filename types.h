@@ -36,13 +36,16 @@ enum SoundEvent{
     PLAYER_FIRE = 0,
     ENEMY_FIRE,
     ENEMY_EXPLOSION,
-    PLAYER_EXPLOSION
+    PLAYER_EXPLOSION,
+    MENU_APPEAR,
+    MENU_TRAVERSE
 };
 
 enum Sprite{
     PLAYER = 0,
     ENEMY1,
-    ENENY2
+    ENEMY2,
+    NUMBERS
 };
 
 enum HeadingDirection{
@@ -68,6 +71,12 @@ typedef enum{
     SPLASH = 0,
     MENU,
     PLAYING,
-    PAUSED
+    PAUSED,
+    RESTART,
+    GAMEOVER
 } gamestate_t;
+
+typedef struct menustate_t{
+
+} menustate_t;
 #endif

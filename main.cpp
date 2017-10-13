@@ -40,6 +40,12 @@ void fire_bullet(bool isPlayer, int x, int y, HeadingDirection dir);
 void init_enemy(enemy_t *o, int x, int y);
 void init_player(int x, int y);
 void init_cosmic_object(int x, int y, int vel_x, int vel_y, HeadingDirection dir);
+void show_splash();
+void show_gameover();
+void show_menu();
+void init_dashboard();
+void print_text(const char *str, uint16_t x, uint16_t y);
+void restart_game();
 //---------------------------------------------------------------------------------------------//
 
 //------------------------------- Defines ----------------------------------------------------//
@@ -61,9 +67,12 @@ void init_cosmic_object(int x, int y, int vel_x, int vel_y, HeadingDirection dir
 
 #define MAX_ENEMY_COUNT    10
 #define MAX_COSMIC_OBJECTS 15 // Max objects in one frame
+
+#define MENU_WIDTH  200
+#define MENU_HEIGHT 100
 //---------------------------------------------------------------------------------------------//
 
-bool gameOver = false;
+bool gameIsRunning = true;
 
 //const static int g_ScreenWidth  = 800;
 //const static int g_ScreenHeight = 600;
@@ -74,6 +83,11 @@ static int g_ScreenHeight;
 
 SDL_Window   *m_pWindow;
 SDL_Renderer *m_pRenderer;
+SDL_Texture  *m_pDashboard;
+
+//TODO improve the menu
+SDL_Texture  *m_pMenu;
+SDL_Texture  *m_pGameOver;
 
 struct player_t player;
 vector<enemy_t> enemies;
@@ -82,6 +96,7 @@ vector<SoundEvent> soundQueue;
 vector<bullet_t> g_Bullets;
 vector<cosmic_t> g_CosmicObjects;
 vector<SDL_Texture *> g_Images;
+vector<menustate_t> g_MenuStack;
 vector<Mix_Chunk *> g_AudioClips;
 
 vector<int> g_enemyXCoords;
@@ -89,8 +104,11 @@ vector<int> g_enemyXCoords;
 int randMotion[] = {1, 0, 1, -1, 1, 1};
 
 uint16_t playerKills = 0;
+uint16_t playerHits  = 0;
 
 gamestate_t g_State = SPLASH;
+
+uint8_t g_MenuSelection = 0;
 
 int main(int argc, char *argv[])
 {
@@ -124,7 +142,7 @@ int main(int argc, char *argv[])
         
         init_player((g_ScreenWidth / 2) - (PLAYER_WIDTH / 2), g_ScreenHeight);
 
-        while(!gameOver){
+        while(gameIsRunning){
         
             capTimer = SDL_GetTicks();
 
@@ -144,11 +162,37 @@ int main(int argc, char *argv[])
                 play_media();
                 misc_activity();
 
-            }else if(g_State == PAUSED){
+            }else if(g_State == MENU){
+                erase_player();
+                erase_objects();
                 handle_inputs();
+                transform_objects();
+                transform_player();
+                draw_objects();
+                draw_player();
+                show_menu();
+                update_screen();
+                play_media();
+            }else if(g_State == GAMEOVER){
+                erase_player();
+                erase_objects();
+                handle_inputs();
+                transform_objects();
+                transform_player();
+                draw_objects();
+                draw_player();
+                show_gameover();
+                update_screen();
+                play_media();
             }else if(g_State == SPLASH){
                 handle_inputs();
+                show_splash();
                 update_screen();
+                play_media();
+            }else if(g_State == RESTART){
+                restart_game();
+
+                g_State = PLAYING;
             }
 
             countedFrames++;
@@ -163,7 +207,8 @@ int main(int argc, char *argv[])
         }
         cleanup();
 
-        cout << "You shot down " << playerKills << " enemy ships." << endl;
+        //cout << "You shot down " << playerKills << " enemy ships." << endl;
+        exit(EXIT_SUCCESS);
 
         return 0;
 }
@@ -179,7 +224,105 @@ void erase_objects()
 
 }
 
+void restart_game()
+{
+   g_enemyXCoords.clear();
+   g_Bullets.clear();
+   soundQueue.clear();
 
+   for(int i=0;i<MAX_ENEMY_COUNT;i++){
+       enemy_t *tmp = &enemies[i];
+
+       init_enemy(tmp, rand() % (g_ScreenWidth - PLAYER_WIDTH), 0);
+       tmp->vel_y = 2;
+
+   }
+
+   init_player((g_ScreenWidth / 2) - (PLAYER_WIDTH / 2), g_ScreenHeight);
+   
+   playerKills = 0;
+   playerHits  = 0;
+}
+
+void show_splash()
+{
+//TODO Update frames here and change the state to PLAYING
+    SDL_Rect src, dest;
+
+    src.w = 300;
+    src.h = 100;
+    src.x = 0;
+    src.y = 0;
+
+    dest.w = 300;
+    dest.h = 100;
+    dest.x = (g_ScreenWidth / 2) - (dest.w / 2);
+    dest.y = (g_ScreenHeight / 2) - (dest.h / 2);
+    //SDL_RenderClear(m_pRenderer);
+    
+    //SDL_RenderClear(m_pRenderer);
+    
+    SDL_RenderCopy(m_pRenderer, m_pMenu, &src, &dest);
+
+    //With Padding
+    print_text("ASTEROIDS GAME", dest.x + (dest.w / 2) - 70, dest.y + 5);
+    print_text("(C) D.N. AMERASINGHE", dest.x + (dest.w / 2) - 100, dest.y + 25);
+    print_text("PRESS ENTER TO START PLAYING", dest.x + 15, dest.y + (dest.h - 20) );
+    
+    //print_text("*", dest.x + 5, (dest.y + 5) + (g_MenuSelection * 13));
+}
+
+void show_gameover()
+{
+    SDL_Rect src, dest;
+
+    src.w = 400;
+    src.h = 100;
+    src.x = 0;
+    src.y = 0;
+
+    dest.w = 400;
+    dest.h = 100;
+    dest.x = (g_ScreenWidth / 2) - (dest.w / 2);
+    dest.y = (g_ScreenHeight / 2) - (dest.h / 2);
+    //SDL_RenderClear(m_pRenderer);
+    
+    //SDL_RenderClear(m_pRenderer);
+    
+    SDL_RenderCopy(m_pRenderer, m_pGameOver, &src, &dest);
+
+    print_text("GAME OVER!!!", dest.x + (dest.w / 2) - 60, dest.y + 10);
+    print_text("PRESS 'R' TO RESTART OR 'X' TO QUIT", dest.x + 20, dest.y + (dest.h / 2) + 20);
+}
+
+void show_menu()
+{
+    SDL_Rect src, dest;
+
+    src.w = 300;
+    src.h = 100;
+    src.x = 0;
+    src.y = 0;
+
+    dest.w = 300;
+    dest.h = 100;
+    dest.x = (g_ScreenWidth / 2) - (dest.w / 2);
+    dest.y = (g_ScreenHeight / 2) - (dest.h / 2);
+    //SDL_RenderClear(m_pRenderer);
+    
+    //SDL_RenderClear(m_pRenderer);
+    
+    SDL_RenderCopy(m_pRenderer, m_pMenu, &src, &dest);
+
+    //With Padding
+    print_text("NEW GAME", dest.x + 15, dest.y + 5);
+    print_text("CONFIGURE", dest.x + 15, dest.y + 25);
+    print_text("EXIT", dest.x + 15, dest.y + 45);
+    
+    print_text("*", dest.x + 5, (dest.y + 5) + (g_MenuSelection * 20));
+}
+
+//TODO improve event handling
 void handle_inputs()
 {
     SDL_Event event;
@@ -187,32 +330,74 @@ void handle_inputs()
     if(SDL_PollEvent(&event)){
        switch(event.type){
         case SDL_QUIT:
-            gameOver = true;
+            gameIsRunning = true;
             break;
 
         case SDL_KEYDOWN:
             if(event.key.keysym.scancode == SDL_SCANCODE_ESCAPE){
                 if(g_State == PLAYING){
-                    g_State = PAUSED;
-                }else if(g_State == PAUSED){
-                    gameOver = true;
+                    //g_State = PAUSED;
+                    g_State = MENU;
+                    SoundEvent se = MENU_APPEAR;
+                    soundQueue.push_back(se);
+                    //Start with the first item
+                    g_MenuSelection = 0;
+                }else if(g_State == MENU){
+                    g_State = PLAYING;
+                }else if(g_State == GAMEOVER){
+                    //g_State = MENU;
                 }
             }else if(event.key.keysym.scancode == SDL_SCANCODE_RETURN){
                 if(g_State == SPLASH){
                     g_State = PLAYING;
                 }else if(g_State == PAUSED){
                     g_State = PLAYING;
+                }else if(g_State == MENU){
+                    if(g_MenuSelection == 0){
+                        g_State = RESTART;
+                    }else if(g_MenuSelection == 2){
+                        //Exit game
+                        gameIsRunning = false;
+                    }
                 } 
-            
             }else if(event.key.keysym.scancode == SDL_SCANCODE_RIGHT){
-                player.vel_x = 3;
+                if(g_State == PLAYING){
+                    player.vel_x = 3;
+                }
             }else if(event.key.keysym.scancode == SDL_SCANCODE_LEFT){
-                player.vel_x = -3;
+                if(g_State == PLAYING){
+                    player.vel_x = -3;
+                }
             }else if(event.key.keysym.scancode == SDL_SCANCODE_RCTRL || event.key.keysym.scancode == SDL_SCANCODE_LCTRL){
-                fire_bullet(true, player.x + (player.w / 2) - (BULLET_WIDTH / 2), player.y - player.h, NORTH);
-                //Add firing sound to the sound queue
-                SoundEvent se = PLAYER_FIRE;
+                if(g_State == PLAYING){
+                    fire_bullet(true, player.x + (player.w / 2) - (BULLET_WIDTH / 2), player.y - player.h, NORTH);
+                    //Add firing sound to the sound queue
+                    SoundEvent se = PLAYER_FIRE;
+                    soundQueue.push_back(se);
+                }
+            }else if(event.key.keysym.scancode == SDL_SCANCODE_UP){
+               if(g_State == MENU){
+                if(g_MenuSelection > 0){
+                    g_MenuSelection--;
+                    SoundEvent se = MENU_TRAVERSE;
+                    soundQueue.push_back(se);
+                } 
+               } 
+            }else if(event.key.keysym.scancode == SDL_SCANCODE_DOWN){
+               if(g_State == MENU){
+                g_MenuSelection++;
+                g_MenuSelection %= 3;
+                SoundEvent se = MENU_TRAVERSE;
                 soundQueue.push_back(se);
+               } 
+            }else if(event.key.keysym.scancode == SDL_SCANCODE_R){
+                if(g_State == GAMEOVER){
+                    g_State = RESTART;
+                }
+            }else if(event.key.keysym.scancode == SDL_SCANCODE_X){
+                if(g_State == GAMEOVER){
+                    gameIsRunning = false;
+                }
             }else{
                 //If any other key play if the game is paused
                 if(g_State == PAUSED){
@@ -246,6 +431,8 @@ void init_player(int x, int y)
     player.vel_y = 0;
     player.acc_x = 0;
     player.acc_y = 0;
+    //Max hit count
+    player.hit_count = 4;
     player.tPlayer = g_Images[PLAYER];
 }
 
@@ -253,8 +440,8 @@ void init_enemy(enemy_t *o, int x, int y)
 {
     int nx;
 
-    o->w = PLAYER_WIDTH;
-    o->h = PLAYER_HEIGHT;
+    o->w = ENEMY_WIDTH;
+    o->h = ENEMY_HEIGHT;
     o->y = y;
     o->vel_x = 0;
     o->vel_y = 0;
@@ -281,6 +468,11 @@ void init_enemy(enemy_t *o, int x, int y)
     o->isVisible = false;
 
     g_enemyXCoords.push_back(tmp);
+}
+
+void init_dashboard()
+{
+    //Init scoreboard, ammo counts etc.
 }
 
 
@@ -322,6 +514,19 @@ bool init(const string title, int xpos, int ypos, int width, int height, int fla
 
 
     //init_player((g_ScreenWidth / 2) - (player.w / 2), g_ScreenHeight);
+    SDL_Surface *s;
+
+    s = SDL_CreateRGBSurface(0, 200, 100, 32, 0, 0, 0, 0);
+    SDL_FillRect(s, nullptr, SDL_MapRGB(s->format, 255, 0, 0));
+    m_pGameOver = SDL_CreateTextureFromSurface(m_pRenderer, s);
+
+    SDL_FreeSurface(s);
+
+    s = SDL_CreateRGBSurface(0, 300, 100, 32, 0, 0, 0, 0);
+    SDL_FillRect(s, nullptr, SDL_MapRGB(s->format, 0, 0, 255));
+    m_pMenu = SDL_CreateTextureFromSurface(m_pRenderer, s);
+
+    SDL_FreeSurface(s);
 
 
     return true;
@@ -330,7 +535,7 @@ bool init(const string title, int xpos, int ypos, int width, int height, int fla
 bool load_media()
 {
 
-   vector<string> sprites = {"shipsc2.pcx", "shipsc3.pcx"};
+   vector<string> sprites = {"shipsc2.pcx", "shipsc3.pcx", "shipsc3.pcx", "fonts.pcx"};
 
    for(unsigned int i=0;i<sprites.size();i++){
     SDL_Surface *tmp;
@@ -350,7 +555,7 @@ bool load_media()
 
 
    //Reading sound mixes
-   vector<string> mixes = {"FLASER.wav", "EXP.wav"};
+   vector<string> mixes = {"fire.wav", "explosion.wav", "panel.wav", "switch.wav"};
 
    for(unsigned int i=0;i<mixes.size();i++){
     Mix_Chunk *tmp = Mix_LoadWAV(mixes[i].c_str());
@@ -362,9 +567,11 @@ bool load_media()
 
 void init_cosmic_object(int x, int y, int vel_x, int vel_y, HeadingDirection dir)
 {
+    uint8_t wh = (rand() % 3) + 1;
+
     cosmic_t object;
-    object.w = 2;
-    object.h = 2;
+    object.w = wh;  //Equal random width and height
+    object.h = wh;
     object.x = x;
     object.y = y;
     object.vel_x = vel_x;
@@ -432,6 +639,9 @@ void cleanup()
     SDL_DestroyRenderer(m_pRenderer);
     SDL_DestroyWindow(m_pWindow);
 
+    SDL_DestroyTexture(m_pDashboard);
+    SDL_DestroyTexture(m_pMenu);
+
     while(!g_AudioClips.empty()){
         Mix_FreeChunk(g_AudioClips.back());
         g_AudioClips.pop_back();
@@ -440,6 +650,11 @@ void cleanup()
         SDL_DestroyTexture(g_Images.back());
         g_Images.pop_back();
     }
+
+    g_enemyXCoords.clear();
+    g_Bullets.clear();
+    g_CosmicObjects.clear();
+    soundQueue.clear();
 
     Mix_Quit();
     IMG_Quit();
@@ -535,6 +750,7 @@ void collision_detection()
         }
     }
 
+    //Enemy Hits
     for(vector<enemy_t>::iterator it = enemies.begin();it != enemies.end(); ++it){
 
         for(vector<bullet_t>::iterator it2 = g_Bullets.begin();it2 != g_Bullets.end(); ++it2){
@@ -543,23 +759,6 @@ void collision_detection()
 
                 if(it2->x >= it->x && it2->x <= (it->x + ENEMY_WIDTH) && it2->y - (BULLET_HEIGHT / 2) <= (it->y + ENEMY_HEIGHT) && it2->y - (BULLET_HEIGHT / 2) >= it->y){
                     //Collision
-                    //it->isVisible = false;
-                    //cout << "Hit" << endl;
-                    /*if(it->hit_count == 0){
-
-                        it->y = 0; 
-                        it->x = rand() % (g_ScreenWidth - PLAYER_WIDTH);
-                        it->isVisible = false;
-                        it->delay_ticks = rand() % (1000 + 1);
-                        it->hit_count = 2;
-                        playerKills++;
-
-                        SoundEvent se = ENEMY_EXPLOSION;
-                        soundQueue.push_back(se);
-                        //cout << "Hit" << endl;
-                    }else{
-                        it->hit_count -= 1;
-                    }*/
                     if(it->hit_count > 0){
                         it->hit_count -= 1;
                     }
@@ -583,6 +782,33 @@ void collision_detection()
             }
         }
     }
+
+    //Player Hits
+    for(vector<bullet_t>::iterator it2 = g_Bullets.begin();it2 != g_Bullets.end(); ++it2){
+
+        if(!it2->isPlayerFired && it2->isVisible){
+
+            if(it2->x >= player.x && it2->x <= (player.x + PLAYER_WIDTH) && it2->y - (BULLET_HEIGHT / 2) <= (player.y + PLAYER_HEIGHT) && it2->y - (BULLET_HEIGHT / 2) >= player.y){
+            //Collision
+                if(player.hit_count > 0){
+                    player.hit_count -= 1;
+                    playerHits++;
+                }
+
+                //Hide the bullet, otherwise two hits are registered
+                it2->isVisible = false;
+
+                if(player.hit_count == 0){
+                    g_State = GAMEOVER;
+
+                    SoundEvent se = ENEMY_EXPLOSION;
+                    soundQueue.push_back(se);
+                }
+
+            }
+        }
+   }
+       
 
    for(vector<bullet_t>::iterator it = g_Bullets.begin();it != g_Bullets.end(); ++it){
         //cout << "playerBullets" << endl;
@@ -617,6 +843,7 @@ void transform_player()
 void draw_objects()
 {
    SDL_Rect src, dest;
+   char buff[80];
 
    src.w = BULLET_WIDTH;
    src.h = BULLET_HEIGHT;
@@ -669,6 +896,60 @@ void draw_objects()
             SDL_RenderCopy(m_pRenderer, b.tEnemy, &src, &dest);
         }
    }
+
+   //Finally draw the dashboard
+   sprintf(buff, "KILLS: %d", playerKills);
+   print_text(buff, g_ScreenWidth - 200, 5);
+   sprintf(buff, "PLAYER HITS: %d", playerHits);
+   print_text(buff, 200, 5);
+}
+
+void print_text(const char *str, uint16_t x, uint16_t y)
+{
+   SDL_Rect src, dest;
+   uint16_t i = 0;
+   uint8_t row = 0;
+
+   while(*str != '\0'){
+    //printf("%c ", *str);
+
+    uint8_t loc = *str;
+    //printf("%d ", loc);
+
+    src.w = 10;
+    src.h = 10;
+    if(loc >= 65){
+        //This is a letter
+        row   = (loc - 65) / 15;
+        src.x = ((loc - 65) % 15) * 10;
+        //printf("row=%d ", row);
+        src.y = row * 10;
+    }else if(loc >= 48){
+        //This is a number
+        row   = (((loc - 48) + 11) / 15) + 1;
+        src.x = (((loc - 48) + 11) % 15) * 10;
+        src.y = row * 10;
+    }else if(loc >= 32){
+        //printf("Space");
+        //Space and chars
+        //row   = 3;
+        //src.x = 0;
+        //src.y = row * 10;
+        row   = (((loc - 32) + 8) / 15) + 2;
+        src.x = (((loc - 32) + 8) % 15) * 10;
+        src.y = row * 10;
+    }
+    //dest.w = g_ScreenWidth;
+    dest.w = 10;
+    //dest.h = 64;
+    dest.h = 10;
+    dest.x = x + (i * 10);
+    dest.y = y;
+    SDL_RenderCopy(m_pRenderer, g_Images[NUMBERS], &src, &dest);
+
+    i++;
+    str++;
+   }
 }
 
 void draw_player()
@@ -712,6 +993,10 @@ void play_media()
             Mix_PlayChannel(-1, g_AudioClips[0], 0);
         }else if(se == ENEMY_EXPLOSION){
             Mix_PlayChannel(-1, g_AudioClips[1], 0);
+        }else if(se == MENU_APPEAR){
+            Mix_PlayChannel(-1, g_AudioClips[2], 0);
+        }else if(se == MENU_TRAVERSE){
+            Mix_PlayChannel(-1, g_AudioClips[3], 0);
         }
         //Inefficient
         soundQueue.erase(soundQueue.begin());
