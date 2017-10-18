@@ -80,15 +80,4 @@ typedef struct menustate_t{
 
 } menustate_t;
 
-typedef enum sevent_t{
-    //TODO Add joystick events
-    KEYUP = 0,
-    KEYDOWN,
-    QUIT
-} sevent_t;
-
-typedef struct event_t{
-    sevent_t event;
-    uint8_t data1, data2;
-} event_t;
 #endif
