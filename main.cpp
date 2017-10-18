@@ -15,6 +15,7 @@
 #include "SDL2/SDL_mixer.h"
 
 #include "types.h"
+#include "events.h"
 
 using namespace std;
 
@@ -46,6 +47,8 @@ void show_menu();
 void init_dashboard();
 void print_text(const char *str, uint16_t x, uint16_t y);
 void restart_game();
+void game_event_handler(event_t *ev);
+void menu_event_handler(event_t *ev);
 //---------------------------------------------------------------------------------------------//
 
 //------------------------------- Defines ----------------------------------------------------//
@@ -112,7 +115,7 @@ uint8_t g_MenuSelection = 0;
 
 int main(int argc, char *argv[])
 {
-        uint32_t fpsTimer, capTimer;
+        uint32_t capTimer;
         int countedFrames = 0;
         //Initial state as splash
 
@@ -138,7 +141,7 @@ int main(int argc, char *argv[])
             init_cosmic_object(rand() % (g_ScreenWidth - 2), rand() % (g_ScreenHeight - 2), 0, 2, SOUTH);
         }
 
-        fpsTimer = SDL_GetTicks();
+        //fpsTimer = SDL_GetTicks();
         
         init_player((g_ScreenWidth / 2) - (PLAYER_WIDTH / 2), g_ScreenHeight);
 
@@ -322,18 +325,39 @@ void show_menu()
     print_text("*", dest.x + 5, (dest.y + 5) + (g_MenuSelection * 20));
 }
 
+void game_event_handler(event_t *ev)
+{
+
+}
+
+void menu_event_handler(event_t *ev)
+{
+
+}
+
 //TODO improve event handling
 void handle_inputs()
 {
     SDL_Event event;
+    event_t e;
 
     if(SDL_PollEvent(&event)){
        switch(event.type){
         case SDL_QUIT:
             gameIsRunning = true;
+
+            e.event = QUIT;
+            event_push(&e);
+
             break;
 
         case SDL_KEYDOWN:
+
+            e.event = KEYDOWN;
+            e.data1 = event.key.keysym.scancode;
+            event_push(&e);
+
+
             if(event.key.keysym.scancode == SDL_SCANCODE_ESCAPE){
                 if(g_State == PLAYING){
                     //g_State = PAUSED;
@@ -418,6 +442,13 @@ void handle_inputs()
             break;
 
        } 
+    }
+
+    event_t *ev;
+    while((ev = event_pop()) != nullptr){
+         //Check for game state
+
+         game_event_handler(ev);
     }
 }
 

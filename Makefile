@@ -9,12 +9,14 @@ EXE = Game
 
 all: $(EXE)
 
-$(EXE): main.o 
-	$(CXX) main.o $(LDFLAGS) -o $@
+$(EXE): main.o events.o
+	$(CXX) main.o events.o $(LDFLAGS) -o $@
 
 main.o: main.cpp
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $< -o $@
 
+events.o: events.cpp
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $< -o $@
 
 
 clean:
