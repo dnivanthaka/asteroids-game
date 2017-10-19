@@ -327,7 +327,83 @@ void show_menu()
 
 void game_event_handler(event_t *ev)
 {
-
+    if(ev->event == KEYDOWN){
+       if(ev->data1 == SDL_SCANCODE_ESCAPE){
+           if(g_State == PLAYING){
+               //g_State = PAUSED;
+               g_State = MENU;
+               SoundEvent se = MENU_APPEAR;
+               soundQueue.push_back(se);
+               //Start with the first item
+               g_MenuSelection = 0;
+           }else if(g_State == MENU){
+               g_State = PLAYING;
+           }else if(g_State == GAMEOVER){
+               //g_State = MENU;
+           }
+       }else if(ev->data1 == SDL_SCANCODE_RETURN){
+           if(g_State == SPLASH){
+               g_State = PLAYING;
+           }else if(g_State == PAUSED){
+               g_State = PLAYING;
+           }else if(g_State == MENU){
+               if(g_MenuSelection == 0){
+                   g_State = RESTART;
+               }else if(g_MenuSelection == 2){
+                   //Exit game
+                   gameIsRunning = false;
+               }
+           } 
+       }else if(ev->data1 == SDL_SCANCODE_RIGHT){
+           if(g_State == PLAYING){
+               player.vel_x = 3;
+           }
+       }else if(ev->data1 == SDL_SCANCODE_LEFT){
+           if(g_State == PLAYING){
+               player.vel_x = -3;
+           }
+       }else if(ev->data1 == SDL_SCANCODE_RCTRL || ev->data1 == SDL_SCANCODE_LCTRL){
+           if(g_State == PLAYING){
+               fire_bullet(true, player.x + (player.w / 2) - (BULLET_WIDTH / 2), player.y - player.h, NORTH);
+               //Add firing sound to the sound queue
+               SoundEvent se = PLAYER_FIRE;
+               soundQueue.push_back(se);
+           }
+       }else if(ev->data1 == SDL_SCANCODE_UP){
+          if(g_State == MENU){
+           if(g_MenuSelection > 0){
+               g_MenuSelection--;
+               SoundEvent se = MENU_TRAVERSE;
+               soundQueue.push_back(se);
+           } 
+          } 
+       }else if(ev->data1 == SDL_SCANCODE_DOWN){
+          if(g_State == MENU){
+           g_MenuSelection++;
+           g_MenuSelection %= 3;
+           SoundEvent se = MENU_TRAVERSE;
+           soundQueue.push_back(se);
+          } 
+       }else if(ev->data1 == SDL_SCANCODE_R){
+           if(g_State == GAMEOVER){
+               g_State = RESTART;
+           }
+       }else if(ev->data1 == SDL_SCANCODE_X){
+           if(g_State == GAMEOVER){
+               gameIsRunning = false;
+           }
+       }else{
+           //If any other key play if the game is paused
+           if(g_State == PAUSED){
+               g_State = PLAYING;
+           } 
+       }
+    }else if(ev->event == KEYUP){
+       if(ev->data1 == SDL_SCANCODE_RIGHT || ev->data1 == SDL_SCANCODE_LEFT){
+           player.vel_y = 0;
+           player.vel_x = 0;
+       }
+    }
 }
 
 void menu_event_handler(event_t *ev)
@@ -352,90 +428,16 @@ void handle_inputs()
             break;
 
         case SDL_KEYDOWN:
-
             e.event = KEYDOWN;
             e.data1 = event.key.keysym.scancode;
             event_push(&e);
-
-
-            if(event.key.keysym.scancode == SDL_SCANCODE_ESCAPE){
-                if(g_State == PLAYING){
-                    //g_State = PAUSED;
-                    g_State = MENU;
-                    SoundEvent se = MENU_APPEAR;
-                    soundQueue.push_back(se);
-                    //Start with the first item
-                    g_MenuSelection = 0;
-                }else if(g_State == MENU){
-                    g_State = PLAYING;
-                }else if(g_State == GAMEOVER){
-                    //g_State = MENU;
-                }
-            }else if(event.key.keysym.scancode == SDL_SCANCODE_RETURN){
-                if(g_State == SPLASH){
-                    g_State = PLAYING;
-                }else if(g_State == PAUSED){
-                    g_State = PLAYING;
-                }else if(g_State == MENU){
-                    if(g_MenuSelection == 0){
-                        g_State = RESTART;
-                    }else if(g_MenuSelection == 2){
-                        //Exit game
-                        gameIsRunning = false;
-                    }
-                } 
-            }else if(event.key.keysym.scancode == SDL_SCANCODE_RIGHT){
-                if(g_State == PLAYING){
-                    player.vel_x = 3;
-                }
-            }else if(event.key.keysym.scancode == SDL_SCANCODE_LEFT){
-                if(g_State == PLAYING){
-                    player.vel_x = -3;
-                }
-            }else if(event.key.keysym.scancode == SDL_SCANCODE_RCTRL || event.key.keysym.scancode == SDL_SCANCODE_LCTRL){
-                if(g_State == PLAYING){
-                    fire_bullet(true, player.x + (player.w / 2) - (BULLET_WIDTH / 2), player.y - player.h, NORTH);
-                    //Add firing sound to the sound queue
-                    SoundEvent se = PLAYER_FIRE;
-                    soundQueue.push_back(se);
-                }
-            }else if(event.key.keysym.scancode == SDL_SCANCODE_UP){
-               if(g_State == MENU){
-                if(g_MenuSelection > 0){
-                    g_MenuSelection--;
-                    SoundEvent se = MENU_TRAVERSE;
-                    soundQueue.push_back(se);
-                } 
-               } 
-            }else if(event.key.keysym.scancode == SDL_SCANCODE_DOWN){
-               if(g_State == MENU){
-                g_MenuSelection++;
-                g_MenuSelection %= 3;
-                SoundEvent se = MENU_TRAVERSE;
-                soundQueue.push_back(se);
-               } 
-            }else if(event.key.keysym.scancode == SDL_SCANCODE_R){
-                if(g_State == GAMEOVER){
-                    g_State = RESTART;
-                }
-            }else if(event.key.keysym.scancode == SDL_SCANCODE_X){
-                if(g_State == GAMEOVER){
-                    gameIsRunning = false;
-                }
-            }else{
-                //If any other key play if the game is paused
-                if(g_State == PAUSED){
-                    g_State = PLAYING;
-                } 
-            }
             
         break;
 
         case SDL_KEYUP:
-            if(event.key.keysym.scancode == SDL_SCANCODE_RIGHT || event.key.keysym.scancode == SDL_SCANCODE_LEFT){
-                player.vel_y = 0;
-                player.vel_x = 0;
-            }
+            e.event = KEYUP;
+            e.data1 = event.key.keysym.scancode;
+            event_push(&e);
         break;
 
         default:
@@ -445,6 +447,7 @@ void handle_inputs()
     }
 
     event_t *ev;
+
     while((ev = event_pop()) != nullptr){
          //Check for game state
 
