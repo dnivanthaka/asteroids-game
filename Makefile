@@ -9,8 +9,8 @@ EXE = Game
 
 all: $(EXE)
 
-$(EXE): main.o events.o
-	$(CXX) main.o events.o $(LDFLAGS) -o $@
+$(EXE): main.o events.o img_pcx.o
+	$(CXX) main.o events.o img_pcx.o $(LDFLAGS) -o $@
 
 main.o: main.cpp
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $< -o $@
@@ -18,6 +18,8 @@ main.o: main.cpp
 events.o: events.cpp
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $< -o $@
 
+img_pcx.o: img_pcx.cpp
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $< -o $@
 
 clean:
 	rm *.o && rm $(EXE)

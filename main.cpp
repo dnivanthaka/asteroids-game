@@ -16,6 +16,7 @@
 
 #include "types.h"
 #include "events.h"
+#include "img_pcx.h"
 
 using namespace std;
 
@@ -595,6 +596,9 @@ bool load_media()
     Mix_Chunk *tmp = Mix_LoadWAV(mixes[i].c_str());
     g_AudioClips.push_back(tmp);
    }
+
+   IMG_PCX *image1 = new IMG_PCX("shipsc2.pcx");
+   image1->read();
 
    return true;
 }
