@@ -19,6 +19,7 @@
 #include "img_pcx.h"
 
 using namespace std;
+using namespace gamelib;
 
 
 //------------------------------ Function Prototypes ---------------------------------------//
