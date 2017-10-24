@@ -14,6 +14,8 @@ namespace gamelib {
         public:
             IMG_PCX(std::string file);
             bool read();
+            void free();
+            SDL_Surface *toSDLSurface();
             ~IMG_PCX();
         private:
             typedef struct RGB_Color{
@@ -48,7 +50,6 @@ namespace gamelib {
             FILE *m_pFp;
             std::string m_FileName;
     
-            void close();
             void debug();
     };
 }

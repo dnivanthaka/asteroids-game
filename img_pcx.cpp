@@ -11,11 +11,7 @@ namespace gamelib {
     
     IMG_PCX::~IMG_PCX()
     {
-
-        this->close();
-   
-        if(m_Image.buffer != NULL)
-            free(m_Image.buffer);
+        this->free();
     }
     
     bool IMG_PCX::read()
@@ -57,7 +53,6 @@ namespace gamelib {
             }
         }
     
-        //TODO Reading palette data
         fseek(m_pFp, -768L, SEEK_END);
 
         uint16_t r, g, b;
@@ -76,7 +71,7 @@ namespace gamelib {
 
 
         //Close the file we're done
-        this->close();
+        fclose(m_pFp);
         
     
     
@@ -99,10 +94,20 @@ namespace gamelib {
         printf("Palette type: %d\n", m_Image.header.palette_type);
     }
     
-    void IMG_PCX::close()
+    void IMG_PCX::free()
     {
         if(m_pFp != NULL){
             fclose(m_pFp);
         }
+
+        if(m_Image.buffer != NULL)
+            free(m_Image.buffer);
+    }
+
+    SDL_Surface *toSurface()
+    {
+        //SDL_Surface *surface = SDL_CreateRGBSurfaceFrom((void *)m_Image.buffer, m_Image.width, m_Image.height, m_Image.bits_per_pixel, m_Image.bytes_per_line, ); 
+    
+        return NULL;
     }
 }
