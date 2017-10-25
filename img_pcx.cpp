@@ -1,4 +1,5 @@
 #include <cstdio>
+#include "SDL2/SDL.h"
 
 #include "img_pcx.h"
 
@@ -31,9 +32,9 @@ namespace gamelib {
     
         this->debug();
         
-        uint16_t cnt = 0, buffsize = m_Image.header.width * m_Image.header.height;
+        uint16_t cnt = 0, buffsize = (m_Image.header.width + 1) * (m_Image.header.height + 1);
     
-        m_Image.buffer = (uint8_t *)malloc(buffsize + 1);
+        m_Image.buffer = (uint8_t *)malloc(buffsize);
     
     
         //Decompress RLE data
@@ -44,6 +45,7 @@ namespace gamelib {
                 m_Image.buffer[cnt++] = (uint8_t)val;
             }else if(val >= 192 && val <= 255){
                 uint16_t runs = val - 192;
+                printf("runs = %d\n", runs);
     
                 //read next value
                 val = fgetc(m_pFp);
@@ -64,8 +66,8 @@ namespace gamelib {
             g = fgetc(m_pFp);
             b = fgetc(m_pFp);
 
-            m_Image.palette[cnt].r = (uint8_t)(r >> 2);
-            m_Image.palette[cnt].g = (uint8_t)(g >> 2);
+            m_Image.palette[cnt].r   = (uint8_t)(r >> 2);
+            m_Image.palette[cnt].g   = (uint8_t)(g >> 2);
             m_Image.palette[cnt++].b = (uint8_t)(b >> 2);
         }
 
@@ -101,12 +103,27 @@ namespace gamelib {
         }
 
         if(m_Image.buffer != NULL)
-            free(m_Image.buffer);
+            ::free(m_Image.buffer);
     }
 
     SDL_Surface *toSurface()
     {
-        //SDL_Surface *surface = SDL_CreateRGBSurfaceFrom((void *)m_Image.buffer, m_Image.width, m_Image.height, m_Image.bits_per_pixel, m_Image.bytes_per_line, ); 
+        Uint32 Rmask, Gmask, Bmask, Amask;
+        Rmask = Gmask = Bmask = Amask = 0;
+
+        #if SDL_BYTEORDER == SDL_LIL_ENDIAN
+            Rmask = 0x000000FF;
+            Gmask = 0x0000FF00;
+            Bmask = 0x00FF0000;
+        #else
+            Rmask = 0xFF0000;
+            Gmask = 0x00FF00;
+            Bmask = 0x0000FF;
+        #endif
+
+
+
+        SDL_Surface *surface = SDL_CreateRGBSurfaceFrom((void *)m_Image.buffer, m_Image.width, m_Image.height, m_Image.bits_per_pixel, m_Image.bytes_per_line, Rmask, Gmask, Bmask, Amask); 
     
         return NULL;
     }

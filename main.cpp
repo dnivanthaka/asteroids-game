@@ -51,6 +51,7 @@ void print_text(const char *str, uint16_t x, uint16_t y);
 void restart_game();
 void game_event_handler(event_t *ev);
 void menu_event_handler(event_t *ev);
+void init_joysticks();
 //---------------------------------------------------------------------------------------------//
 
 //------------------------------- Defines ----------------------------------------------------//
@@ -227,6 +228,33 @@ void erase_player()
 void erase_objects()
 {
 
+}
+
+void init_joysticks()
+{
+    SDL_Joystick *joy;
+
+    if(SDL_NumJoysticks() > 0){
+        printf("\nJoystick(s)/Game pad(s) detected.\n");
+
+        // Open joystick
+        joy=SDL_JoystickOpen(0);
+  
+        if(joy)
+        {
+            printf("Opened Joystick 0\n");
+            printf("Name: %s\n", SDL_JoystickName(0));
+            printf("Number of Axes: %d\n", SDL_JoystickNumAxes(joy));
+            printf("Number of Buttons: %d\n", SDL_JoystickNumButtons(joy));
+            printf("Number of Balls: %d\n", SDL_JoystickNumBalls(joy));
+        }
+        else
+            printf("Couldn't open Joystick 0\n");
+  
+        // Close if opened
+        //if(SDL_JoystickOpened(0))
+            SDL_JoystickClose(joy);
+    }
 }
 
 void restart_game()
@@ -514,7 +542,7 @@ void init_dashboard()
 
 bool init(const string title, int xpos, int ypos, int width, int height, int flags)
 {
-        if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) == 0){
+        if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK ) == 0){
                 m_pWindow = SDL_CreateWindow(title.c_str(), xpos, ypos, width, height, flags);
 
         if(m_pWindow == NULL){
@@ -563,6 +591,8 @@ bool init(const string title, int xpos, int ypos, int width, int height, int fla
     m_pMenu = SDL_CreateTextureFromSurface(m_pRenderer, s);
 
     SDL_FreeSurface(s);
+
+    init_joysticks();
 
 
     return true;

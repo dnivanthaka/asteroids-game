@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <cstdio>
 
+#include "SDL2/SDL.h"
+
 // Methods needed
 // init(), delete(), load(), copy_to_buffer();
 namespace gamelib {
