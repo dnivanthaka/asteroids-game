@@ -281,6 +281,8 @@ void show_splash()
 {
 //TODO Update frames here and change the state to PLAYING
     SDL_Rect src, dest;
+    SDL_Texture *tmp;
+    SDL_Surface *tmp2 = NULL;
 
     src.w = 300;
     src.h = 100;
@@ -292,10 +294,19 @@ void show_splash()
     dest.x = (g_ScreenWidth / 2) - (dest.w / 2);
     dest.y = (g_ScreenHeight / 2) - (dest.h / 2);
     //SDL_RenderClear(m_pRenderer);
+    IMG_PCX *image1 = new IMG_PCX("shipsc2.pcx");
+    image1->read();
+    tmp2 = image1->toSDLSurface(m_pWindow);
+    tmp = SDL_CreateTextureFromSurface(m_pRenderer, tmp2);
+    if(tmp == NULL){
+        printf("Error\n");
+        printf(SDL_GetError());
+    }
     
     //SDL_RenderClear(m_pRenderer);
     
-    SDL_RenderCopy(m_pRenderer, m_pMenu, &src, &dest);
+    //SDL_RenderCopy(m_pRenderer, m_pMenu, &src, &dest);
+    SDL_RenderCopy(m_pRenderer, tmp, NULL, NULL);
 
     //With Padding
     print_text("ASTEROIDS GAME", dest.x + (dest.w / 2) - 70, dest.y + 5);
@@ -628,8 +639,6 @@ bool load_media()
     g_AudioClips.push_back(tmp);
    }
 
-   IMG_PCX *image1 = new IMG_PCX("shipsc2.pcx");
-   image1->read();
 
    return true;
 }

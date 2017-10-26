@@ -106,25 +106,44 @@ namespace gamelib {
             ::free(m_Image.buffer);
     }
 
-    SDL_Surface *toSurface()
+    SDL_Surface * IMG_PCX::toSDLSurface(SDL_Window *m_pWindow)
     {
-        Uint32 Rmask, Gmask, Bmask, Amask;
-        Rmask = Gmask = Bmask = Amask = 0;
+        SDL_Surface *surface = NULL;
+        Uint32 rmask, gmask, bmask, amask;
+        rmask = gmask = bmask = amask = 0;
 
-        #if SDL_BYTEORDER == SDL_LIL_ENDIAN
-            Rmask = 0x000000FF;
-            Gmask = 0x0000FF00;
-            Bmask = 0x00FF0000;
+        SDL_Palette palette;
+
+        #if SDL_BYTEORDER == SDL_BIG_ENDIAN
+            rmask = 0xff000000;
+            gmask = 0x00ff0000;
+            bmask = 0x0000ff00;
+            amask = 0x000000ff;
         #else
-            Rmask = 0xFF0000;
-            Gmask = 0x00FF00;
-            Bmask = 0x0000FF;
+            rmask = 0x000000ff;
+            gmask = 0x0000ff00;
+            bmask = 0x00ff0000;
+            amask = 0xff000000;
         #endif
 
+        palette.ncolors = 256;
+        palette.colors = m_Image.palette;
 
 
-        SDL_Surface *surface = SDL_CreateRGBSurfaceFrom((void *)m_Image.buffer, m_Image.width, m_Image.height, m_Image.bits_per_pixel, m_Image.bytes_per_line, Rmask, Gmask, Bmask, Amask); 
-    
-        return NULL;
+
+        surface = SDL_CreateRGBSurfaceFrom(m_Image.buffer, m_Image.header.width + 1, m_Image.header.height + 1, 24,  3 *24, rmask, gmask, bmask, amask); 
+        //surface = SDL_CreateRGBSurface(SDL_SWSURFACE, m_Image.header.width + 1,  m_Image.header.height + 1, 24, rmask, gmask, bmask, amask); 
+
+        //SDL_SetColors(surface, m_Image.palette, 0, 256);
+        //SDL_SetSurfacePalette(surface, &palette);
+        //SDL_Surface *tmp = SDL_ConvertSurfaceFormat(surface, SDL_GetWindowPixelFormat(m_pWindow), 0);
+        //SDL_FreeSurface(surface);
+        //surface->pixels = m_Image.buffer;
+        //SDL_LockSurface(surface);
+        //memcpy(surface->pixels, m_Image.buffer,(m_Image.header.width + 1) *  (m_Image.header.height + 1));
+        //surface->format->palette = &palette;
+        //SDL_UnlockSurface(surface);
+
+        return surface;
     }
 }

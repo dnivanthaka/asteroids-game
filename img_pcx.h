@@ -17,7 +17,7 @@ namespace gamelib {
             IMG_PCX(std::string file);
             bool read();
             void free();
-            SDL_Surface *toSDLSurface();
+            SDL_Surface *toSDLSurface(SDL_Window *m_pWindow);
             ~IMG_PCX();
         private:
             typedef struct RGB_Color{
@@ -44,7 +44,8 @@ namespace gamelib {
         
             typedef struct pcx_image{
                 pcx_header header;
-                RGB_Color  palette[256];
+                //RGB_Color  palette[256];
+                SDL_Color  palette[256];
                 uint8_t    *buffer; /*Raw image data*/
             } pcx_image;
     
