@@ -131,12 +131,13 @@ namespace gamelib {
 
 
 
-        surface = SDL_CreateRGBSurfaceFrom(m_Image.buffer, m_Image.header.width + 1, m_Image.header.height + 1, 24,  3 *24, rmask, gmask, bmask, amask); 
+        surface = SDL_CreateRGBSurfaceFrom((void *)m_Image.buffer, m_Image.header.width + 1, m_Image.header.height + 1, 24,  3 *24, rmask, gmask, bmask, amask); 
         //surface = SDL_CreateRGBSurface(SDL_SWSURFACE, m_Image.header.width + 1,  m_Image.header.height + 1, 24, rmask, gmask, bmask, amask); 
 
         //SDL_SetColors(surface, m_Image.palette, 0, 256);
-        //SDL_SetSurfacePalette(surface, &palette);
-        //SDL_Surface *tmp = SDL_ConvertSurfaceFormat(surface, SDL_GetWindowPixelFormat(m_pWindow), 0);
+        SDL_SetSurfacePalette(surface, &palette);
+        //memcpy(surface->pixels, m_Image.buffer,64);
+        //SDL_Surface *tmp = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGBA8888, NULL);
         //SDL_FreeSurface(surface);
         //surface->pixels = m_Image.buffer;
         //SDL_LockSurface(surface);

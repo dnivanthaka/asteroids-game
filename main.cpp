@@ -297,16 +297,16 @@ void show_splash()
     IMG_PCX *image1 = new IMG_PCX("shipsc2.pcx");
     image1->read();
     tmp2 = image1->toSDLSurface(m_pWindow);
-    tmp = SDL_CreateTextureFromSurface(m_pRenderer, tmp2);
+    /*tmp = SDL_CreateTextureFromSurface(m_pRenderer, tmp2);
     if(tmp == NULL){
         printf("Error\n");
         printf(SDL_GetError());
-    }
+	}*/
     
     //SDL_RenderClear(m_pRenderer);
     
     //SDL_RenderCopy(m_pRenderer, m_pMenu, &src, &dest);
-    SDL_RenderCopy(m_pRenderer, tmp, NULL, NULL);
+    //SDL_RenderCopy(m_pRenderer, tmp, NULL, NULL);
 
     //With Padding
     print_text("ASTEROIDS GAME", dest.x + (dest.w / 2) - 70, dest.y + 5);
