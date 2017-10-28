@@ -45,7 +45,7 @@ namespace gamelib {
                 m_Image.buffer[cnt++] = (uint8_t)val;
             }else if(val >= 192 && val <= 255){
                 uint16_t runs = val - 192;
-                printf("runs = %d\n", runs);
+                //printf("runs = %d\n", runs);
     
                 //read next value
                 val = fgetc(m_pFp);
@@ -118,26 +118,62 @@ namespace gamelib {
             rmask = 0xff000000;
             gmask = 0x00ff0000;
             bmask = 0x0000ff00;
-            amask = 0x000000ff;
+            //amask = 0x000000ff;
+            amask = 0;
         #else
             rmask = 0x000000ff;
             gmask = 0x0000ff00;
             bmask = 0x00ff0000;
-            amask = 0xff000000;
+            //amask = 0xff000000;
+            amask = 0;
         #endif
 
         palette.ncolors = 256;
         palette.colors = m_Image.palette;
 
+        /*
+        int depth, pitch;
+        if (req_format == STBI_rgb) {
+            depth = 24;
+            pitch = 3*width; // 3 bytes per pixel * pixels per row
+        } else { // STBI_rgb_alpha (RGBA)
+            depth = 32;
+            pitch = 4*width;
+        }
+        */
 
 
-        surface = SDL_CreateRGBSurfaceFrom((void *)m_Image.buffer, m_Image.header.width + 1, m_Image.header.height + 1, 24,  3 *24, rmask, gmask, bmask, amask); 
+
+        /*surface = SDL_CreateRGBSurfaceFrom(
+            (void *)m_Image.buffer, 
+            m_Image.header.width, 
+            m_Image.header.height, 
+            m_Image.header.bits_per_pixel, //(bits per pixel) 
+            m_Image.header.width * 3, //(width*depth_in_bytes, in this case) 
+            //m_Image.header.width * (m_Image.header.bits_per_pixel / 8), //(width*depth_in_bytes, in this case) 
+            rmask, 
+            gmask, 
+            bmask, 
+            amask);*/ 
+        surface = SDL_CreateRGBSurface(
+            SDL_SWSURFACE, 
+            m_Image.header.width + 1, 
+            m_Image.header.height + 1, 
+            m_Image.header.bits_per_pixel * 3, //(bits per pixel) 
+            //m_Image.header.width * (m_Image.header.bits_per_pixel / 8), //(width*depth_in_bytes, in this case) 
+            rmask, 
+            gmask, 
+            bmask, 
+            amask); 
         //surface = SDL_CreateRGBSurface(SDL_SWSURFACE, m_Image.header.width + 1,  m_Image.header.height + 1, 24, rmask, gmask, bmask, amask); 
 
         //SDL_SetColors(surface, m_Image.palette, 0, 256);
-        SDL_SetSurfacePalette(surface, &palette);
-        //memcpy(surface->pixels, m_Image.buffer,64);
-        //SDL_Surface *tmp = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGBA8888, NULL);
+        //SDL_SetSurfacePalette(surface, &palette);
+        memcpy(surface->pixels, (void *)m_Image.buffer,(m_Image.header.width + 1) * (m_Image.header.height + 1));
+        /*SDL_Surface *tmp = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGB888, 0);
+        if(tmp == NULL){
+            printf(SDL_GetError());
+        }*/
         //SDL_FreeSurface(surface);
         //surface->pixels = m_Image.buffer;
         //SDL_LockSurface(surface);
