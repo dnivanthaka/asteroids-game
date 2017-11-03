@@ -17,6 +17,7 @@
 #include "types.h"
 #include "events.h"
 #include "img_pcx.h"
+#include "primitives.h"
 
 using namespace std;
 using namespace gamelib;
@@ -52,6 +53,7 @@ void restart_game();
 void game_event_handler(event_t *ev);
 void menu_event_handler(event_t *ev);
 void init_joysticks();
+void show_dialogue(SDL_Renderer *renderer, int x, int y, int w, int h, string message, bool onlyOnce);
 //---------------------------------------------------------------------------------------------//
 
 //------------------------------- Defines ----------------------------------------------------//
@@ -294,19 +296,20 @@ void show_splash()
     dest.x = (g_ScreenWidth / 2) - (dest.w / 2);
     dest.y = (g_ScreenHeight / 2) - (dest.h / 2);
     //SDL_RenderClear(m_pRenderer);
-    IMG_PCX *image1 = new IMG_PCX("shipsc2.pcx");
-    image1->read();
-    tmp2 = image1->toSDLSurface(m_pWindow);
-    tmp = SDL_CreateTextureFromSurface(m_pRenderer, tmp2);
-    if(tmp == NULL){
-        printf("Error\n");
-        printf(SDL_GetError());
-	}
+    //IMG_PCX *image1 = new IMG_PCX("shipsc2.pcx");
+    //image1->read();
+    //tmp2 = image1->toSDLSurface(m_pWindow);
+    //tmp = SDL_CreateTextureFromSurface(m_pRenderer, tmp2);
+    //if(tmp == NULL){
+        //printf("Error\n");
+        //printf(SDL_GetError());
+	//}
     
     //SDL_RenderClear(m_pRenderer);
     
     //SDL_RenderCopy(m_pRenderer, m_pMenu, &src, &dest);
-    SDL_RenderCopy(m_pRenderer, tmp, NULL, NULL);
+    //SDL_RenderCopy(m_pRenderer, tmp, NULL, NULL);
+    show_dialogue(m_pRenderer, (g_ScreenWidth / 2) - (dest.w / 2), (g_ScreenHeight / 2) - (dest.h / 2), 300, 100, "TEST", false);
 
     //With Padding
     print_text("ASTEROIDS GAME", dest.x + (dest.w / 2) - 70, dest.y + 5);
@@ -314,6 +317,60 @@ void show_splash()
     print_text("PRESS ENTER TO START PLAYING", dest.x + 15, dest.y + (dest.h - 20) );
     
     //print_text("*", dest.x + 5, (dest.y + 5) + (g_MenuSelection * 13));
+}
+
+void show_dialogue(SDL_Renderer *renderer, int x, int y, int w, int h, string message, bool onlyOnce = false)
+{
+    static uint8_t times = 0;
+
+    if(onlyOnce && times > 0)
+        return;
+
+    SDL_Rect src, dest;
+    SDL_Surface *s;
+    SDL_Texture *t;
+
+    src.w = w;
+    src.h = h;
+    src.x = 0;
+    src.y = 0;
+
+    dest.w = w;
+    dest.h = h;
+    dest.x = x;
+    dest.y = y;
+
+    s = SDL_CreateRGBSurface(0, w, h, 32, 0, 0, 0, 0);
+    SDL_FillRect(s, nullptr, SDL_MapRGB(s->format, 255, 0, 0));
+    t = SDL_CreateTextureFromSurface(m_pRenderer, s);
+
+    SDL_FreeSurface(s);
+    
+    SDL_RenderCopy(renderer, t, &src, &dest);
+
+    //Border color
+    SDL_SetRenderDrawColor( renderer, 255, 255, 255, 255 );
+
+    //Box top
+    draw_line(renderer, x + 2, y + 2, x + w - 4, y + 2);
+
+    //Box right
+    draw_line(renderer, x + w - 4, y + 2, x + w - 4, y + h - 4);
+
+    //Box bottom
+    draw_line(renderer, x + 2, y + h - 4, x + w - 4, y + h - 4);
+
+    //Box left
+    draw_line(renderer, x + 2, y + 2, x + 2, y + h - 4);
+
+    SDL_SetRenderDrawColor( renderer, 0, 0, 0, 0 );
+    
+    SDL_DestroyTexture(t); 
+
+    //With Padding
+    print_text(message.c_str(), x + 10, y + 10);
+
+    times++;
 }
 
 void show_gameover()
