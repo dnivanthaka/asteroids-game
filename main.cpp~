@@ -79,8 +79,8 @@ void show_dialogue(SDL_Renderer *renderer, int x, int y, int w, int h, string me
 #define MENU_WIDTH  200
 #define MENU_HEIGHT 100
 
-#define MAX_SOUND_EVENTS   10
-#define MAX_BULLETS        50
+#define MAX_SOUND_EVENTS 10
+#define MAX_BULLETS      50
 #define MAX_COSMIC_OBJECTS 50
 //---------------------------------------------------------------------------------------------//
 
