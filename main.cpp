@@ -309,7 +309,7 @@ void show_splash()
     
     //SDL_RenderCopy(m_pRenderer, m_pMenu, &src, &dest);
     //SDL_RenderCopy(m_pRenderer, tmp, NULL, NULL);
-    show_dialogue(m_pRenderer, (g_ScreenWidth / 2) - (dest.w / 2), (g_ScreenHeight / 2) - (dest.h / 2), 300, 100, "TEST", false);
+    show_dialogue(m_pRenderer, (g_ScreenWidth / 2) - (dest.w / 2), (g_ScreenHeight / 2) - (dest.h / 2), 300, 100, "", false);
 
     //With Padding
     print_text("ASTEROIDS GAME", dest.x + (dest.w / 2) - 70, dest.y + 5);
@@ -341,7 +341,7 @@ void show_dialogue(SDL_Renderer *renderer, int x, int y, int w, int h, string me
     dest.y = y;
 
     s = SDL_CreateRGBSurface(0, w, h, 32, 0, 0, 0, 0);
-    SDL_FillRect(s, nullptr, SDL_MapRGB(s->format, 255, 0, 0));
+    SDL_FillRect(s, nullptr, SDL_MapRGB(s->format, 0, 0, 255));
     t = SDL_CreateTextureFromSurface(m_pRenderer, s);
 
     SDL_FreeSurface(s);
