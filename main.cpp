@@ -81,7 +81,6 @@ void show_dialogue(SDL_Renderer *renderer, int x, int y, int w, int h, string me
 
 #define MAX_SOUND_EVENTS   10
 #define MAX_BULLETS        50
-#define MAX_COSMIC_OBJECTS 50
 //---------------------------------------------------------------------------------------------//
 
 bool gameIsRunning = true;
@@ -103,6 +102,7 @@ SDL_Texture  *m_pGameOver;
 
 struct player_t player;
 vector<enemy_t> enemies;
+enemy_t *g_Enemies[MAX_ENEMY_COUNT];
 
 vector<SoundEvent> soundQueue;
 vector<bullet_t> g_Bullets;
@@ -144,6 +144,15 @@ int main(int argc, char *argv[])
             tmp.vel_y = 2;
 
             enemies.push_back(tmp);
+        }
+
+        for(int i=0;i<MAX_ENEMY_COUNT;i++){
+            enemy_t tmp;
+
+            init_enemy(&tmp, rand() % (g_ScreenWidth - PLAYER_WIDTH), 0);
+            tmp.vel_y = 2;
+
+            g_Enemies[i] = &tmp;
         }
 
         for(int i=0;i<MAX_COSMIC_OBJECTS;i++){
@@ -271,6 +280,13 @@ void restart_game()
 
    for(int i=0;i<MAX_ENEMY_COUNT;i++){
        enemy_t *tmp = &enemies[i];
+
+       init_enemy(tmp, rand() % (g_ScreenWidth - PLAYER_WIDTH), 0);
+       tmp->vel_y = 2;
+
+   }
+   for(int i=0;i<MAX_ENEMY_COUNT;i++){
+       enemy_t *tmp = g_Enemies[i];
 
        init_enemy(tmp, rand() % (g_ScreenWidth - PLAYER_WIDTH), 0);
        tmp->vel_y = 2;
