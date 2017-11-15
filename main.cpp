@@ -137,14 +137,14 @@ int main(int argc, char *argv[])
         srand(time(nullptr));
 
 
-        for(int i=0;i<MAX_ENEMY_COUNT;i++){
+        /*for(int i=0;i<MAX_ENEMY_COUNT;i++){
             enemy_t tmp;
 
             init_enemy(&tmp, rand() % (g_ScreenWidth - PLAYER_WIDTH), 0);
             tmp.vel_y = 2;
 
             enemies.push_back(tmp);
-        }
+        }*/
 
         for(int i=0;i<MAX_ENEMY_COUNT;i++){
             enemy_t tmp;
@@ -278,13 +278,13 @@ void restart_game()
    g_Bullets.clear();
    soundQueue.clear();
 
-   for(int i=0;i<MAX_ENEMY_COUNT;i++){
+   /*for(int i=0;i<MAX_ENEMY_COUNT;i++){
        enemy_t *tmp = &enemies[i];
 
        init_enemy(tmp, rand() % (g_ScreenWidth - PLAYER_WIDTH), 0);
        tmp->vel_y = 2;
 
-   }
+   }*/
    for(int i=0;i<MAX_ENEMY_COUNT;i++){
        enemy_t *tmp = g_Enemies[i];
 
@@ -840,17 +840,11 @@ void object_logic()
             it->isVisible = true;
         }
     }
-    for(vector<enemy_t>::iterator it = enemies.begin();it != enemies.end(); ++it){
+    /*for(vector<enemy_t>::iterator it = enemies.begin();it != enemies.end(); ++it){
 
         //Move enemies down 
         if(it->delay_ticks == 0){
             //Occasional wobble
-            /*if((rand() % 3) > 1){
-                it->vel_x = randMotion[rand() % 6];
-                it->delay_ticks = rand() % 100;
-            }else{
-                it->vel_x = 0;
-            }*/
             it->vel_x = rand() % 2;
 
             if(rand() % 2)
@@ -861,12 +855,35 @@ void object_logic()
             it->x += it->vel_x;
             it->isVisible = true;
         }else{
-            /*if(it->isVisible){
-                // Random motion
-                it->x += it->vel_x;
-                it->y += it->vel_y;
-            }*/
+            it->delay_ticks -= 1;
+        }
 
+        //Check if player x coord are within range and fire, 8 pixels more from each boundary
+        if(player.x + (PLAYER_WIDTH / 2) >= (it->x - ENEMY_RANGE_OFFSET) && player.x + (PLAYER_WIDTH / 2) <= (it->x + PLAYER_WIDTH + ENEMY_RANGE_OFFSET)){
+            if(it->fire_delay <= 0 && it->isVisible){
+                fire_bullet(false, it->x + (ENEMY_WIDTH / 2), it->y + ENEMY_HEIGHT, SOUTH);
+                it->fire_delay = rand() % 200;
+            }else{
+                it->fire_delay -= 1;
+            }
+        }
+    }*/
+    for(int i=0;i<MAX_ENEMY_COUNT;i++){
+        enemy_t *it = g_Enemies[i];
+
+        //Move enemies down 
+        if(it->delay_ticks == 0){
+            //Occasional wobble
+            it->vel_x = rand() % 2;
+
+            if(rand() % 2)
+                it->vel_x = -(it->vel_x);
+
+
+            it->y += it->vel_y;
+            it->x += it->vel_x;
+            it->isVisible = true;
+        }else{
             it->delay_ticks -= 1;
         }
 
@@ -894,8 +911,18 @@ void collision_detection()
     }
 
     //Cheking enemy boundaries
-    for(vector<enemy_t>::iterator it = enemies.begin();it != enemies.end(); ++it){
+    /*for(vector<enemy_t>::iterator it = enemies.begin();it != enemies.end(); ++it){
 
+        //it->y += it->vel_y;
+        if(it->y > g_ScreenHeight){
+            it->y = 0; 
+            it->x = rand() % (g_ScreenWidth - ENEMY_WIDTH);
+            it->isVisible = false;
+            it->delay_ticks = rand() % (1000 + 1);
+        }
+    }*/
+    for(int i=0;i<MAX_ENEMY_COUNT;i++){
+        enemy_t *it = g_Enemies[i];
         //it->y += it->vel_y;
         if(it->y > g_ScreenHeight){
             it->y = 0; 
@@ -906,7 +933,39 @@ void collision_detection()
     }
 
     //Enemy Hits
-    for(vector<enemy_t>::iterator it = enemies.begin();it != enemies.end(); ++it){
+    /*for(vector<enemy_t>::iterator it = enemies.begin();it != enemies.end(); ++it){
+
+        for(vector<bullet_t>::iterator it2 = g_Bullets.begin();it2 != g_Bullets.end(); ++it2){
+
+            if(it2->isPlayerFired && it2->isVisible && it->isVisible){
+
+                if(it2->x >= it->x && it2->x <= (it->x + ENEMY_WIDTH) && it2->y - (BULLET_HEIGHT / 2) <= (it->y + ENEMY_HEIGHT) && it2->y - (BULLET_HEIGHT / 2) >= it->y){
+                    //Collision
+                    if(it->hit_count > 0){
+                        it->hit_count -= 1;
+                    }
+
+                    //Hide the bullet, otherwise two hits are registered
+                    it2->isVisible = false;
+
+                    if(it->hit_count == 0){
+                        it->y = 0; 
+                        it->x = rand() % (g_ScreenWidth - PLAYER_WIDTH);
+                        it->isVisible = false;
+                        it->delay_ticks = rand() % (1000 + 1);
+                        it->hit_count = 2;
+                        playerKills++;
+
+                        SoundEvent se = ENEMY_EXPLOSION;
+                        soundQueue.push_back(se);
+                    }
+
+                }
+            }
+        }
+    }*/
+    for(int i=0;i<MAX_ENEMY_COUNT;i++){
+        enemy_t *it = g_Enemies[i];
 
         for(vector<bullet_t>::iterator it2 = g_Bullets.begin();it2 != g_Bullets.end(); ++it2){
 
@@ -1034,13 +1093,24 @@ void draw_objects()
 
 
    //Drawing enemies
-
    src.w = PLAYER_WIDTH;
    src.h = PLAYER_HEIGHT;
    src.x = 0;
    src.y = 0;
-   for(vector<enemy_t>::iterator it = enemies.begin();it != enemies.end(); ++it){
+   /*for(vector<enemy_t>::iterator it = enemies.begin();it != enemies.end(); ++it){
         enemy_t b = *it;
+        //cout << "Enemies " << b.w << " - " << b.h << " - " << b.x << endl;
+
+        if(b.isVisible){
+            dest.w = b.w;
+            dest.h = b.h;
+            dest.x = b.x;
+            dest.y = b.y;
+            SDL_RenderCopy(m_pRenderer, b.tEnemy, &src, &dest);
+        }
+   }*/
+   for(int i=0;i<MAX_ENEMY_COUNT;i++){
+        enemy_t b = *g_Enemies[i];
         //cout << "Enemies " << b.w << " - " << b.h << " - " << b.x << endl;
 
         if(b.isVisible){
