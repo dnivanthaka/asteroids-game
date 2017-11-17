@@ -101,7 +101,7 @@ SDL_Texture  *m_pMenu;
 SDL_Texture  *m_pGameOver;
 
 struct player_t player;
-vector<enemy_t> enemies;
+//vector<enemy_t> enemies;
 enemy_t *g_Enemies[MAX_ENEMY_COUNT];
 
 vector<SoundEvent> soundQueue;
@@ -147,12 +147,12 @@ int main(int argc, char *argv[])
         }*/
 
         for(int i=0;i<MAX_ENEMY_COUNT;i++){
-            enemy_t tmp;
+            enemy_t *tmp = new enemy_t;
 
-            init_enemy(&tmp, rand() % (g_ScreenWidth - PLAYER_WIDTH), 0);
-            tmp.vel_y = 2;
+            init_enemy(tmp, rand() % (g_ScreenWidth - PLAYER_WIDTH), 0);
+            tmp->vel_y = 2;
 
-            g_Enemies[i] = &tmp;
+            g_Enemies[i] = tmp;
         }
 
         for(int i=0;i<MAX_COSMIC_OBJECTS;i++){
@@ -804,6 +804,10 @@ void cleanup()
     while(!g_Images.empty()){
         SDL_DestroyTexture(g_Images.back());
         g_Images.pop_back();
+    }
+    for(int i=0;i<MAX_ENEMY_COUNT;i++){
+        enemy_t *tmp = g_Enemies[i];
+        delete tmp;
     }
 
     g_enemyXCoords.clear();
