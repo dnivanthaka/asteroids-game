@@ -107,6 +107,7 @@ enemy_t *g_Enemies[MAX_ENEMY_COUNT];
 vector<SoundEvent> soundQueue;
 vector<bullet_t> g_Bullets;
 vector<cosmic_t> g_CosmicObjects;
+cosmic_t *g_pCosmicObjects[MAX_COSMIC_OBJECTS];
 vector<SDL_Texture *> g_Images;
 vector<menustate_t> g_MenuStack;
 vector<Mix_Chunk *> g_AudioClips;
