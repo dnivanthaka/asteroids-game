@@ -43,7 +43,7 @@ void cleanup();
 void fire_bullet(bool isPlayer, int x, int y, HeadingDirection dir);
 void init_enemy(enemy_t *o, int x, int y);
 void init_player(int x, int y);
-void init_cosmic_object(int x, int y, int vel_x, int vel_y, HeadingDirection dir);
+void init_cosmic_object(cosmic_t *object, int x, int y, int vel_x, int vel_y, HeadingDirection dir);
 void show_splash();
 void show_gameover();
 void show_menu();
@@ -102,12 +102,13 @@ SDL_Texture  *m_pGameOver;
 
 struct player_t player;
 //vector<enemy_t> enemies;
-enemy_t *g_Enemies[MAX_ENEMY_COUNT];
+enemy_t *g_pEnemies[MAX_ENEMY_COUNT];
 
 vector<SoundEvent> soundQueue;
 vector<bullet_t> g_Bullets;
-vector<cosmic_t> g_CosmicObjects;
+bullet_t *g_pBullets[MAX_BULLETS];
 cosmic_t *g_pCosmicObjects[MAX_COSMIC_OBJECTS];
+
 vector<SDL_Texture *> g_Images;
 vector<menustate_t> g_MenuStack;
 vector<Mix_Chunk *> g_AudioClips;
@@ -137,27 +138,20 @@ int main(int argc, char *argv[])
 
         srand(time(nullptr));
 
-
-        /*for(int i=0;i<MAX_ENEMY_COUNT;i++){
-            enemy_t tmp;
-
-            init_enemy(&tmp, rand() % (g_ScreenWidth - PLAYER_WIDTH), 0);
-            tmp.vel_y = 2;
-
-            enemies.push_back(tmp);
-        }*/
-
         for(int i=0;i<MAX_ENEMY_COUNT;i++){
             enemy_t *tmp = new enemy_t;
 
             init_enemy(tmp, rand() % (g_ScreenWidth - PLAYER_WIDTH), 0);
             tmp->vel_y = 2;
 
-            g_Enemies[i] = tmp;
+            g_pEnemies[i] = tmp;
         }
 
         for(int i=0;i<MAX_COSMIC_OBJECTS;i++){
-            init_cosmic_object(rand() % (g_ScreenWidth - 2), rand() % (g_ScreenHeight - 2), 0, 2, SOUTH);
+            cosmic_t *object = new cosmic_t;
+            init_cosmic_object(object, rand() % (g_ScreenWidth - 2), rand() % (g_ScreenHeight - 2), 0, 2, SOUTH);
+
+            g_pCosmicObjects[i] = object;
         }
 
         //fpsTimer = SDL_GetTicks();
@@ -279,15 +273,8 @@ void restart_game()
    g_Bullets.clear();
    soundQueue.clear();
 
-   /*for(int i=0;i<MAX_ENEMY_COUNT;i++){
-       enemy_t *tmp = &enemies[i];
-
-       init_enemy(tmp, rand() % (g_ScreenWidth - PLAYER_WIDTH), 0);
-       tmp->vel_y = 2;
-
-   }*/
    for(int i=0;i<MAX_ENEMY_COUNT;i++){
-       enemy_t *tmp = g_Enemies[i];
+       enemy_t *tmp = g_pEnemies[i];
 
        init_enemy(tmp, rand() % (g_ScreenWidth - PLAYER_WIDTH), 0);
        tmp->vel_y = 2;
@@ -316,20 +303,6 @@ void show_splash()
     dest.h = 100;
     dest.x = (g_ScreenWidth / 2) - (dest.w / 2);
     dest.y = (g_ScreenHeight / 2) - (dest.h / 2);
-    //SDL_RenderClear(m_pRenderer);
-    //IMG_PCX *image1 = new IMG_PCX("shipsc2.pcx");
-    //image1->read();
-    //tmp2 = image1->toSDLSurface(m_pWindow);
-    //tmp = SDL_CreateTextureFromSurface(m_pRenderer, tmp2);
-    //if(tmp == NULL){
-        //printf("Error\n");
-        //printf(SDL_GetError());
-	//}
-    
-    //SDL_RenderClear(m_pRenderer);
-    
-    //SDL_RenderCopy(m_pRenderer, m_pMenu, &src, &dest);
-    //SDL_RenderCopy(m_pRenderer, tmp, NULL, NULL);
     show_dialogue(m_pRenderer, (g_ScreenWidth / 2) - (dest.w / 2), (g_ScreenHeight / 2) - (dest.h / 2), 300, 100, "", false);
 
     //With Padding
@@ -407,7 +380,6 @@ void show_gameover()
     dest.h = 100;
     dest.x = (g_ScreenWidth / 2) - (dest.w / 2);
     dest.y = (g_ScreenHeight / 2) - (dest.h / 2);
-    //SDL_RenderClear(m_pRenderer);
     
     //SDL_RenderClear(m_pRenderer);
     
@@ -430,9 +402,6 @@ void show_menu()
     dest.h = 100;
     dest.x = (g_ScreenWidth / 2) - (dest.w / 2);
     dest.y = (g_ScreenHeight / 2) - (dest.h / 2);
-    //SDL_RenderClear(m_pRenderer);
-    
-    //SDL_RenderClear(m_pRenderer);
     
     SDL_RenderCopy(m_pRenderer, m_pMenu, &src, &dest);
 
@@ -721,39 +690,35 @@ bool load_media()
    return true;
 }
 
-void init_cosmic_object(int x, int y, int vel_x, int vel_y, HeadingDirection dir)
+void init_cosmic_object(cosmic_t *object, int x, int y, int vel_x, int vel_y, HeadingDirection dir)
 {
     uint8_t wh = (rand() % 3) + 1;
 
-    cosmic_t object;
-    object.w = wh;  //Equal random width and height
-    object.h = wh;
-    object.x = x;
-    object.y = y;
-    object.vel_x = vel_x;
-    object.vel_y = vel_y;
-    object.isVisible = true;
+    object->w = wh;  //Equal random width and height
+    object->h = wh;
+    object->x = x;
+    object->y = y;
+    object->vel_x = vel_x;
+    object->vel_y = vel_y;
+    object->isVisible = true;
     
     if(dir == NORTH){
         //Up
-        object.vel_y = -4;
-        object.acc_x = 0;
-        object.acc_y = 0;
+        object->vel_y = -4;
+        object->acc_x = 0;
+        object->acc_y = 0;
     }else{
         //Down
-        object.vel_y = (rand() % 4) + 1;
-        object.acc_x = 0;
-        object.acc_y = 0;
+        object->vel_y = (rand() % 4) + 1;
+        object->acc_x = 0;
+        object->acc_y = 0;
     }
 
     SDL_Surface* s;
 
-    s = SDL_CreateRGBSurface(0, object.w, object.h, 32, 0, 0, 0, 0);
+    s = SDL_CreateRGBSurface(0, object->w, object->h, 32, 0, 0, 0, 0);
     SDL_FillRect(s, nullptr, SDL_MapRGB(s->format, (rand() % 255) + 1, (rand() % 255) + 1, (rand() % 255) + 1));
-    object.tCosmic = SDL_CreateTextureFromSurface(m_pRenderer, s);
-
-
-    g_CosmicObjects.push_back(object);
+    object->tCosmic = SDL_CreateTextureFromSurface(m_pRenderer, s);
 }
 
 void fire_bullet(bool isPlayer, int x, int y, HeadingDirection dir)
@@ -807,7 +772,11 @@ void cleanup()
         g_Images.pop_back();
     }
     for(int i=0;i<MAX_ENEMY_COUNT;i++){
-        enemy_t *tmp = g_Enemies[i];
+        enemy_t *tmp = g_pEnemies[i];
+        delete tmp;
+    }
+    for(int i=0;i<MAX_COSMIC_OBJECTS;i++){
+        cosmic_t *tmp = g_pCosmicObjects[i];
         delete tmp;
     }
 
@@ -835,46 +804,19 @@ void object_logic()
         //Move bullet
         it->y += it->vel_y;
     }
-    for(vector<cosmic_t>::iterator it = g_CosmicObjects.begin();it != g_CosmicObjects.end(); ++it){
+    for(int i=0;i<MAX_COSMIC_OBJECTS;i++){
+        cosmic_t *obj = g_pCosmicObjects[i];
 
         //Move 
-        if(it->isVisible){
-            it->y += it->vel_y;
-            it->x += it->vel_x;
+        if(obj->isVisible){
+            obj->y += obj->vel_y;
+            obj->x += obj->vel_x;
         }else{
-            it->isVisible = true;
+            obj->isVisible = true;
         }
     }
-    /*for(vector<enemy_t>::iterator it = enemies.begin();it != enemies.end(); ++it){
-
-        //Move enemies down 
-        if(it->delay_ticks == 0){
-            //Occasional wobble
-            it->vel_x = rand() % 2;
-
-            if(rand() % 2)
-                it->vel_x = -(it->vel_x);
-
-
-            it->y += it->vel_y;
-            it->x += it->vel_x;
-            it->isVisible = true;
-        }else{
-            it->delay_ticks -= 1;
-        }
-
-        //Check if player x coord are within range and fire, 8 pixels more from each boundary
-        if(player.x + (PLAYER_WIDTH / 2) >= (it->x - ENEMY_RANGE_OFFSET) && player.x + (PLAYER_WIDTH / 2) <= (it->x + PLAYER_WIDTH + ENEMY_RANGE_OFFSET)){
-            if(it->fire_delay <= 0 && it->isVisible){
-                fire_bullet(false, it->x + (ENEMY_WIDTH / 2), it->y + ENEMY_HEIGHT, SOUTH);
-                it->fire_delay = rand() % 200;
-            }else{
-                it->fire_delay -= 1;
-            }
-        }
-    }*/
     for(int i=0;i<MAX_ENEMY_COUNT;i++){
-        enemy_t *it = g_Enemies[i];
+        enemy_t *it = g_pEnemies[i];
 
         //Move enemies down 
         if(it->delay_ticks == 0){
@@ -916,18 +858,8 @@ void collision_detection()
     }
 
     //Cheking enemy boundaries
-    /*for(vector<enemy_t>::iterator it = enemies.begin();it != enemies.end(); ++it){
-
-        //it->y += it->vel_y;
-        if(it->y > g_ScreenHeight){
-            it->y = 0; 
-            it->x = rand() % (g_ScreenWidth - ENEMY_WIDTH);
-            it->isVisible = false;
-            it->delay_ticks = rand() % (1000 + 1);
-        }
-    }*/
     for(int i=0;i<MAX_ENEMY_COUNT;i++){
-        enemy_t *it = g_Enemies[i];
+        enemy_t *it = g_pEnemies[i];
         //it->y += it->vel_y;
         if(it->y > g_ScreenHeight){
             it->y = 0; 
@@ -938,39 +870,8 @@ void collision_detection()
     }
 
     //Enemy Hits
-    /*for(vector<enemy_t>::iterator it = enemies.begin();it != enemies.end(); ++it){
-
-        for(vector<bullet_t>::iterator it2 = g_Bullets.begin();it2 != g_Bullets.end(); ++it2){
-
-            if(it2->isPlayerFired && it2->isVisible && it->isVisible){
-
-                if(it2->x >= it->x && it2->x <= (it->x + ENEMY_WIDTH) && it2->y - (BULLET_HEIGHT / 2) <= (it->y + ENEMY_HEIGHT) && it2->y - (BULLET_HEIGHT / 2) >= it->y){
-                    //Collision
-                    if(it->hit_count > 0){
-                        it->hit_count -= 1;
-                    }
-
-                    //Hide the bullet, otherwise two hits are registered
-                    it2->isVisible = false;
-
-                    if(it->hit_count == 0){
-                        it->y = 0; 
-                        it->x = rand() % (g_ScreenWidth - PLAYER_WIDTH);
-                        it->isVisible = false;
-                        it->delay_ticks = rand() % (1000 + 1);
-                        it->hit_count = 2;
-                        playerKills++;
-
-                        SoundEvent se = ENEMY_EXPLOSION;
-                        soundQueue.push_back(se);
-                    }
-
-                }
-            }
-        }
-    }*/
     for(int i=0;i<MAX_ENEMY_COUNT;i++){
-        enemy_t *it = g_Enemies[i];
+        enemy_t *it = g_pEnemies[i];
 
         for(vector<bullet_t>::iterator it2 = g_Bullets.begin();it2 != g_Bullets.end(); ++it2){
 
@@ -1027,7 +928,6 @@ void collision_detection()
             }
         }
    }
-       
 
    for(vector<bullet_t>::iterator it = g_Bullets.begin();it != g_Bullets.end(); ++it){
         //cout << "playerBullets" << endl;
@@ -1036,15 +936,15 @@ void collision_detection()
         }
    }
    //Remove cosmic objects that are out of the screen area
-   for(vector<cosmic_t>::iterator it = g_CosmicObjects.begin();it != g_CosmicObjects.end(); ++it){
-        if(it->isVisible && (it->y > g_ScreenHeight || it->y < 0)){
-             it->isVisible  = false;
-             //it->y = rand() % (g_ScreenHeight - 2); 
-             it->y = 0; 
-             it->x = rand() % (g_ScreenWidth - 2);
-             //it->delay_ticks = rand() % (1000 + 1);
+    for(int i=0;i<MAX_COSMIC_OBJECTS;i++){
+        cosmic_t *obj = g_pCosmicObjects[i];
+
+        if(obj->isVisible && (obj->y > g_ScreenHeight || obj->y < 0)){
+             obj->isVisible  = false;
+             obj->y = 0; 
+             obj->x = rand() % (g_ScreenWidth - 2);
         }
-   }
+    }
 }
 
 void transform_objects()
@@ -1069,6 +969,20 @@ void draw_objects()
    src.x = 0;
    src.y = 0;
    //First draw stars and other cosmic objects
+   for(int i=0;i<MAX_COSMIC_OBJECTS;i++){
+        cosmic_t *obj = g_pCosmicObjects[i];
+
+        if(obj->isVisible){
+            cosmic_t b = *obj;
+
+
+            dest.w = b.w;
+            dest.h = b.h;
+            dest.x = b.x;
+            dest.y = b.y;
+            SDL_RenderCopy(m_pRenderer, b.tCosmic, &src, &dest);
+        }
+   }
    for(vector<cosmic_t>::iterator it = g_CosmicObjects.begin();it != g_CosmicObjects.end(); ++it){
         if(it->isVisible){
             cosmic_t b = *it;
@@ -1102,20 +1016,9 @@ void draw_objects()
    src.h = PLAYER_HEIGHT;
    src.x = 0;
    src.y = 0;
-   /*for(vector<enemy_t>::iterator it = enemies.begin();it != enemies.end(); ++it){
-        enemy_t b = *it;
-        //cout << "Enemies " << b.w << " - " << b.h << " - " << b.x << endl;
 
-        if(b.isVisible){
-            dest.w = b.w;
-            dest.h = b.h;
-            dest.x = b.x;
-            dest.y = b.y;
-            SDL_RenderCopy(m_pRenderer, b.tEnemy, &src, &dest);
-        }
-   }*/
    for(int i=0;i<MAX_ENEMY_COUNT;i++){
-        enemy_t b = *g_Enemies[i];
+        enemy_t b = *g_pEnemies[i];
         //cout << "Enemies " << b.w << " - " << b.h << " - " << b.x << endl;
 
         if(b.isVisible){
@@ -1160,11 +1063,6 @@ void print_text(const char *str, uint16_t x, uint16_t y)
         src.x = (((loc - 48) + 11) % 15) * 10;
         src.y = row * 10;
     }else if(loc >= 32){
-        //printf("Space");
-        //Space and chars
-        //row   = 3;
-        //src.x = 0;
-        //src.y = row * 10;
         row   = (((loc - 32) + 8) / 15) + 2;
         src.x = (((loc - 32) + 8) % 15) * 10;
         src.y = row * 10;
