@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
         int countedFrames = 0;
         //Initial state as splash
 
-        init("AstroGame",  0,  0,  0,  0,  SDL_WINDOW_FULLSCREEN);
+        init("AstroGame",  0,  0,  800,  600,  SDL_WINDOW_OPENGL);
 
         //player = new struct player_t();
 
